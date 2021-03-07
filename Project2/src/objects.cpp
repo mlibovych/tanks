@@ -1,7 +1,7 @@
 #include "objects.h"
 
 void drawSpriteWithBorder(Sprite* sprite, int x, int y) {
-    drawSprite(sprite, x + border_size, y + border_size);
+    drawSprite(sprite, x + BORDER_SIZE, y + BORDER_SIZE);
 }
 
 Object::Object(Sprite *m_sprite) :
@@ -15,7 +15,7 @@ Object::~Object() {
 }
 
 void Object::Draw(int x, int y) {
-    drawSpriteWithBorder(sprite, x * cell_size, y * cell_size);
+    drawSpriteWithBorder(sprite, x * CELL_SIZE, y * CELL_SIZE);
 }
 
 BrickWall::BrickWall(Sprite *m_sprite) :
@@ -25,8 +25,18 @@ BrickWall::BrickWall(Sprite *m_sprite) :
 }
 BrickWall::~BrickWall()
 {
-    destroySprite(sprite);
-}	
+    
+}
+
+SteelWall::SteelWall(Sprite *m_sprite) :
+        Object(m_sprite)
+{
+
+}
+SteelWall::~SteelWall()
+{
+    
+}
 
 Movable::Movable(FRKey key) : current_direction(key) 
 {
@@ -36,7 +46,7 @@ Movable::~Movable() {
 
 }
 
-void Movable::Draw() {
+void Essence::Draw() {
     drawSpriteWithBorder(sprite, x, y);
 };
 
@@ -91,9 +101,11 @@ FRKey Movable::getDirection() {
 
 Tank::Tank(FRKey key) : Movable(key) 
 {	
+    m_type = MType::TANK;
     w = 64;
     h = 64;
 }
+
 Tank::~Tank()
 {
     
@@ -109,6 +121,21 @@ void Tank::SetType(std::shared_ptr<TankType> new_type) {
     type = new_type;
     sprite = type->even[current_direction];
     health = type->max_health;
+}
+
+void Tank::SetBullet(std::shared_ptr<Bullet> new_bullet) {
+    bullet = new_bullet;
+}
+
+void Tank::Shoot() {
+    if (!bullet->active) {
+        bullet->active = true;
+        bullet->x = x + w / 2 - bullet->w / 2;
+        bullet->y = y + h / 2 - bullet->h / 2;
+        bullet->directions[current_direction] = 1;
+        bullet->current_direction = current_direction;
+        bullet->ChangeSprite(current_direction);
+    }
 }
 
 
@@ -131,6 +158,38 @@ TankType::~TankType() {
     for (auto &[key, value] : odd) {
         destroySprite(value);
     };
+}
+
+BulletData::BulletData() {
+    sprites = {
+        {FRKey::UP, createSprite("Project2/data/u_bull.png")},
+        {FRKey::LEFT, createSprite("Project2/data/l_bull.png")},
+        {FRKey::DOWN, createSprite("Project2/data/d_bull.png")},
+        {FRKey::RIGHT, createSprite("Project2/data/r_bull.png")}
+    };
+}
+
+BulletData::~BulletData() {
+    for (auto &[key, value] : sprites) {
+        destroySprite(value);
+    };
+}
+
+Bullet::Bullet(std::shared_ptr<BulletData> m_data, FRKey key) : Movable(key),
+                                                               data(m_data)
+{
+    m_type = MType::BULLET;
+    w = 16;
+    h = 16;
+    ChangeSprite(key);
+}
+
+void Bullet::SetData(std::shared_ptr<BulletData> m_data) {
+    data = m_data;
+}
+
+void Bullet::ChangeSprite(FRKey k) {
+    sprite = data->sprites[k];
 }
 
 

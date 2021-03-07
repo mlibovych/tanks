@@ -10,12 +10,13 @@
 
 #include "Framework.h"
 
-#define MAX_SPEED 4
+#define MAX_SPEED 6
 #define GAME_SPEED 12
 #define FRAMES 3
+#define BULLETS_SPEED 6
 
-#define border_size  10
-#define cell_size 16
+#define BORDER_SIZE  10
+#define CELL_SIZE 16
 
 void drawSpriteWithBorder(Sprite* sprite, int x, int y);
 
@@ -39,27 +40,46 @@ public:
 	int power = 1;	
 };
 
-class Movable {
+class SteelWall : public Object {
 public:
-	FRKey current_direction;
-	std::unordered_map<FRKey, int> directions = {
-        {FRKey::RIGHT, 0},
-        {FRKey::LEFT, 0},
-        {FRKey::UP, 0},
-        {FRKey::DOWN, 0}
-    };
+	SteelWall(Sprite *m_sprite);
+	virtual ~SteelWall();
+
+	int power = 4;
+};
+
+class Essence {
+public:
+	Essence() = default;
+
+	Essence(Sprite *m_sprite) : sprite(m_sprite)
+	{
+
+	}
+	virtual ~Essence() {
+
+	}
+
+	virtual void Draw();
+
 	Sprite *sprite;
 
 	int x = 0;
 	int y = 0;
 	int w = 0;
 	int h = 0;
-	int step_size = 1;
+};
+
+enum class MType {
+	TANK,
+	BULLET,
+	COUNT
+};
+
+class Movable : public Essence {
 public:
 	Movable(FRKey key);
 	virtual ~Movable();
-
-	virtual void Draw();
 
 	void Start(FRKey k);
 
@@ -72,6 +92,18 @@ public:
 	virtual void ChangeSprite(FRKey k) = 0;
 
 	FRKey getDirection();
+
+	FRKey current_direction;
+	std::unordered_map<FRKey, int> directions = {
+        {FRKey::RIGHT, 0},
+        {FRKey::LEFT, 0},
+        {FRKey::UP, 0},
+        {FRKey::DOWN, 0}
+    };
+
+	MType m_type = MType::COUNT;
+	
+	int step_size = 1;
 };
 
 class TankType {
@@ -88,20 +120,46 @@ public:
 	int speed;
 };
 
+class BulletData {
+public:
+	BulletData();
+	~BulletData();
+
+	std::unordered_map<FRKey, Sprite *> sprites;
+};
+
 class BaseTank : public TankType {
 public:
 	BaseTank();
 };
 
-class Tank : public Movable{
+class Bullet : public Movable {
+public:
+	Bullet(std::shared_ptr<BulletData> m_data, FRKey key);
+
+	void SetData(std::shared_ptr<BulletData> m_data);
+
+	std::shared_ptr<BulletData> data;
+	virtual void ChangeSprite(FRKey k) override;
+
+	bool active = false;
+};
+
+class Tank : public Movable {
 public:
 	Tank(FRKey key);
 	~Tank();
 	
 	void SetType(std::shared_ptr<TankType> new_type);
+	void SetBullet(std::shared_ptr<Bullet> new_bullet);
 
 	virtual void ChangeSprite(FRKey k) override;
+
+	void Shoot();
+
 	std::shared_ptr<TankType> type;
+	std::shared_ptr<Bullet> bullet;
+
 	int health;
 };
 

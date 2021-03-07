@@ -1,5 +1,7 @@
 #pragma once
 
+#include <fstream>
+
 #include "Framework.h"
 #include "objects.h"
 
@@ -9,11 +11,14 @@ using Map = std::array<MapRow, 32>;
 class MyFramework : public Framework {
 	std::unordered_map<std::string, Sprite *> sprites;
 	std::unordered_map<std::string, std::shared_ptr<TankType>> tank_types;
-	std::unique_ptr<Tank> player;
-	Map map;
+	std::unordered_map<std::shared_ptr<Tank>, std::shared_ptr<Bullet>> bullets;
+	std::shared_ptr<Tank> player;
+	std::unique_ptr<Essence> base;
 
-	std::shared_ptr<BrickWall> b_wall;
-	std::shared_ptr<TankType> base_tank;
+	std::unordered_map<std::string, std::shared_ptr<BrickWall>> objects;
+	std::shared_ptr<BulletData> bullet_data;
+
+	Map map;
 
 	int map_w = 512;
 	int map_h = 512;
@@ -26,11 +31,11 @@ public:
 
 	virtual void Close();
 
+	void DrawMap();
+
 	virtual bool Tick();
 
-	void SpawnTank(std::shared_ptr<TankType> type, int x, int y, FRKey key);
-
-	void CreatePlayer();
+	std::shared_ptr<Tank> SpawnTank(std::shared_ptr<TankType> type, int x, int y, FRKey key);
 
 	bool CheckCollision(Movable *object, FRKey k, int expected_x, int expected_y);
 
@@ -51,4 +56,10 @@ public:
 	Map GenerateMap();
 
 	void LoadSprites();
+
+	void CreateObjects();
+
+	void CreateTanks();
+
+	void MoveBullets();
 };
