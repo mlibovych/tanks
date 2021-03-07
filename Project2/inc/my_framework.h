@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <optional>
 
 #include "Framework.h"
 #include "objects.h"
@@ -37,11 +38,15 @@ public:
 
 	std::shared_ptr<Tank> SpawnTank(std::shared_ptr<TankType> type, int x, int y, FRKey key);
 
-	bool CheckCollision(Movable *object, FRKey k, int expected_x, int expected_y);
+	bool CheckCollision(Movable *object, FRKey k, int expected_x, int expected_y, std::optional<int> power);
+
+	bool CheckBulletCollision(Bullet *bullet, FRKey key, int expected_x, int expected_y, int power);
+
+	bool CheckTankCollision(Tank *object, FRKey k, int expected_x, int expected_y);
 
 	void Rotate(Movable* object, FRKey k);
 
-	void Move(Movable* object, int speed);
+	void Move(Movable* object, int speed, std::optional<int> power);
 
 	virtual void onMouseMove(int x, int y, int xrelative, int yrelative);
 
@@ -62,4 +67,5 @@ public:
 	void CreateTanks();
 
 	void MoveBullets();
+
 };

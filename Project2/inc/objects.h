@@ -161,6 +161,8 @@ public:
 	std::shared_ptr<Bullet> bullet;
 
 	int health;
+
+	bool enemy = true;
 };
 
 class Player : public Tank {

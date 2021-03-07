@@ -132,6 +132,18 @@ void Tank::Shoot() {
         bullet->active = true;
         bullet->x = x + w / 2 - bullet->w / 2;
         bullet->y = y + h / 2 - bullet->h / 2;
+        if (current_direction == FRKey::RIGHT) {
+            bullet->x += w / 2;
+        }
+        if (current_direction == FRKey::LEFT) {
+            bullet->x -= w / 2;
+        }
+        if (current_direction == FRKey::DOWN) {
+            bullet->y += h / 2;
+        }
+        if (current_direction == FRKey::UP) {
+            bullet->y -= h / 2;
+        }
         bullet->directions[current_direction] = 1;
         bullet->current_direction = current_direction;
         bullet->ChangeSprite(current_direction);
@@ -141,7 +153,7 @@ void Tank::Shoot() {
 
 Player::Player(FRKey key) : Tank(key) 
 {	
-
+    enemy = false;
 }
 Player::~Player() {
 
