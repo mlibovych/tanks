@@ -4,24 +4,22 @@ void drawSpriteWithBorder(Sprite* sprite, int x, int y) {
     drawSprite(sprite, x + border_size, y + border_size);
 }
 
-Object::Object(const char *path, int n_x, int n_y) :
-        sprite(createSprite(path)),
-        x(n_x),
-        y(n_y)
+Object::Object(Sprite *m_sprite) :
+        sprite(m_sprite)
 {
 
 }
 
 Object::~Object() {
-    destroySprite(sprite);
+
 }
 
-void Object::Draw() {
+void Object::Draw(int x, int y) {
     drawSpriteWithBorder(sprite, x * cell_size, y * cell_size);
 }
 
-BrickWall::BrickWall(int n_x, int n_y) :
-        Object("Project2/data/brick.png", n_x, n_y)
+BrickWall::BrickWall(Sprite *m_sprite) :
+        Object(m_sprite)
 {
 
 }
@@ -93,12 +91,40 @@ FRKey Movable::getDirection() {
 
 Tank::Tank(FRKey key) : Movable(key) 
 {	
-    sprite = even[current_direction];
     w = 64;
     h = 64;
 }
 Tank::~Tank()
 {
+    
+}
+
+void Tank::ChangeSprite(FRKey k) {
+    sprite = getTickCount() % 2 == 0 ?
+            type->even[k] :
+            type->odd[k];
+} 
+
+void Tank::SetType(std::shared_ptr<TankType> new_type) {
+    type = new_type;
+    sprite = type->even[current_direction];
+    health = type->max_health;
+}
+
+
+Player::Player(FRKey key) : Tank(key) 
+{	
+
+}
+Player::~Player() {
+
+}
+
+TankType::TankType() {
+
+}
+
+TankType::~TankType() {
     for (auto &[key, value] : even) {
         destroySprite(value);
     };
@@ -107,17 +133,22 @@ Tank::~Tank()
     };
 }
 
-void Tank::ChangeSprite(FRKey k) {
-    sprite = getTickCount() % 2 == 0 ?
-            even[k] :
-            odd[k];
-} 
 
-
-Player::Player(FRKey key) : Tank(key) 
-{	
-    speed = 2;
-}
-Player::~Player() {
-
+BaseTank::BaseTank() : TankType() {
+    even = {
+        {FRKey::UP, createSprite("Project2/data/u_even.png")},
+        {FRKey::LEFT, createSprite("Project2/data/l_even.png")},
+        {FRKey::DOWN, createSprite("Project2/data/d_even.png")},
+        {FRKey::RIGHT, createSprite("Project2/data/r_even.png")}
+    };
+    odd = {
+        {FRKey::UP, createSprite("Project2/data/u_odd.png")},
+        {FRKey::LEFT, createSprite("Project2/data/l_odd.png")},
+        {FRKey::DOWN, createSprite("Project2/data/d_odd.png")},
+        {FRKey::RIGHT, createSprite("Project2/data/r_odd.png")}
+    };
+    speed = 1;
+    max_health = 1;
+    bullet_speed = 1;
+    power = 1;
 }

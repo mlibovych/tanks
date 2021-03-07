@@ -13,32 +13,63 @@ void MyFramework::PreInit(int& width, int& height, bool& fullscreen)
 }
 
 bool MyFramework::Init() {
-    background = createSprite("Project2/data/back.jpg");
-    for (int i = 4; i < 8; ++i) {
-        for (int j = 10; j < 14; ++j) {
-            map[i][j] = std::make_shared<BrickWall> (j, i);
-        }	
-    }
-    player = std::make_unique<Player> (FRKey::UP);
+    LoadSprites();
+    //tanks generation
+    b_wall = std::make_shared<BrickWall> (sprites["b1"]);
+    base_tank = std::make_shared<BaseTank> ();
+
+    //map generation
+    map = GenerateMap();
+
+    //player creation
+    CreatePlayer();
+
+    //check result
     return true;
 }
 
+void MyFramework::CreatePlayer() {
+    player = std::make_unique<Player> (FRKey::UP);
+    player->SetType(base_tank);
+    player->x = 8 * cell_size;
+    player->y = 28 * cell_size;
+}
+
+void MyFramework::LoadSprites() {
+    sprites["background"] = createSprite("Project2/data/back.jpg");
+    sprites["b1"] = createSprite("Project2/data/b1.png");
+    sprites["b2"] = createSprite("Project2/data/b2.png");
+}
+
 void MyFramework::Close() {
-    destroySprite(background);
+    for (auto& [key, value] : sprites) {
+        destroySprite(value);
+    }
 }
 
 bool MyFramework::Tick() {
-    Move(player.get());
-    drawSpriteWithBorder(background, 0, 0);
+    //draw background
+    drawSpriteWithBorder(sprites["background"], 0, 0);
+    //draw map
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
             if (map[i][j]) {
-                map[i][j]->Draw();
+                map[i][j]->Draw(j, i);
             }
         }	
     }
+    //move objects
+    Move(player.get(), player->type->speed * 2);
+    //draw objects
     player->Draw();
     return false;
+}
+
+void MyFramework::SpawnTank(std::shared_ptr<TankType> type, int x, int y, FRKey key) {
+    std::unique_ptr<Tank> tank = std::make_unique<Tank> (key);
+    tank->x = x;
+    tank->y = y;
+    tank->SetType(type);
 }
 
 bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int expected_y) {
@@ -63,26 +94,19 @@ bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int e
 
     row += expected_y / cell_size;
     cell += expected_x / cell_size;
-    if (k == FRKey::RIGHT || k == FRKey::LEFT) {
-        if (k == FRKey::RIGHT) {
-            cell += object->w / cell_size;
-        }
-        for (int i = 0; i < object->h / cell_size; i++) {
-            if (map[row + i][cell]) {
+    if (k == FRKey::RIGHT) {
+        cell += expected_x / cell_size == 0 ? 0 : 1;
+    }
+    if (k == FRKey::DOWN) {
+        row += expected_y / cell_size == 0 ? 0 : 1;
+    }
+
+    for (int i = 0; i < object->h / cell_size; i++) {
+        for (int j = 0; j < object->w / cell_size; j++)
+            if (map[row + i][cell + j]) {
                 return 1;
             }
         }
-    }
-    else {
-        if (k == FRKey::DOWN) {
-            row += object->h / cell_size;
-        }
-        for (int i = 0; i < object->w / cell_size; i++) {
-            if (map[row][cell + i]) {
-                return 1;
-            }
-        }
-    }
     return 0;
 }
 
@@ -116,8 +140,8 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
     }
 }
 
-void MyFramework::Move(Movable* object) {
-    int frame = object->speed > MAX_SPEED ? GAME_SPEED / MAX_SPEED : GAME_SPEED / object->speed;
+void MyFramework::Move(Movable* object, int speed) {
+    int frame = speed > MAX_SPEED ? GAME_SPEED / MAX_SPEED : GAME_SPEED / speed;
     
     for (const auto& [key, value] : object->directions) {
         if (value == 1) {
@@ -151,4 +175,16 @@ void MyFramework::onKeyReleased(FRKey k) {
 const char* MyFramework::GetTitle()
 {
     return "Tanks";
+}
+
+Map MyFramework::GenerateMap() {
+    Map map;
+
+    for (int i = 24; i < 28; ++i) {
+        for (int j = 10; j < 14; ++j) {
+            map[i][j] = b_wall;
+        }	
+    }
+
+    return map;
 }

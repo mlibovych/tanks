@@ -23,20 +23,20 @@ class Object {
 protected:
 	int health = 1;
 public:
-	Object(const char *path, int n_x, int n_y);
+	Object(Sprite *m_sprite);
 	virtual ~Object();
 
-	virtual void Draw();
+	virtual void Draw(int x, int y);
 
 	Sprite *sprite;
-	int x;
-	int y;
 };
 
 class BrickWall : public Object {
 public:
-	BrickWall(int n_x, int n_y);
-	virtual ~BrickWall();	
+	BrickWall(Sprite *m_sprite);
+	virtual ~BrickWall();
+
+	int power = 1;	
 };
 
 class Movable {
@@ -54,7 +54,6 @@ public:
 	int y = 0;
 	int w = 0;
 	int h = 0;
-	int speed = 1;
 	int step_size = 1;
 public:
 	Movable(FRKey key);
@@ -75,24 +74,35 @@ public:
 	FRKey getDirection();
 };
 
+class TankType {
+public:
+	TankType();
+	~TankType();
+
+	std::unordered_map<FRKey, Sprite *> even;
+    std::unordered_map<FRKey, Sprite *> odd;
+
+	int max_health;
+	int bullet_speed;
+	int power;
+	int speed;
+};
+
+class BaseTank : public TankType {
+public:
+	BaseTank();
+};
+
 class Tank : public Movable{
-	std::unordered_map<FRKey, Sprite *> even = {
-        {FRKey::UP, createSprite("Project2/data/u_even.png")},
-        {FRKey::LEFT, createSprite("Project2/data/l_even.png")},
-        {FRKey::DOWN, createSprite("Project2/data/d_even.png")},
-        {FRKey::RIGHT, createSprite("Project2/data/r_even.png")}
-    };
-    std::unordered_map<FRKey, Sprite *> odd = {
-        {FRKey::UP, createSprite("Project2/data/u_odd.png")},
-        {FRKey::LEFT, createSprite("Project2/data/l_odd.png")},
-        {FRKey::DOWN, createSprite("Project2/data/d_odd.png")},
-        {FRKey::RIGHT, createSprite("Project2/data/r_odd.png")}
-    };
 public:
 	Tank(FRKey key);
 	~Tank();
+	
+	void SetType(std::shared_ptr<TankType> new_type);
 
-	virtual void ChangeSprite(FRKey k) override; 
+	virtual void ChangeSprite(FRKey k) override;
+	std::shared_ptr<TankType> type;
+	int health;
 };
 
 class Player : public Tank {
