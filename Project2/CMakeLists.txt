@@ -8,7 +8,7 @@ SET(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pipe -Wno-inconsistent-missing-override -Wall -Wextra -Werror -Wall -Wpedantic -Wno-unused-parameter")
 
-set(SOURCES src/game.cpp)
+set(SOURCES src/game.cpp src/my_framework.cpp src/objects.cpp)
 
 include_directories(inc)
 include_directories(../Framework/inc)
