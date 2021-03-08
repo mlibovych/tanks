@@ -31,11 +31,11 @@ BrickWall::~BrickWall()
 SteelWall::SteelWall(Sprite *m_sprite) :
         Object(m_sprite)
 {
-
+    health = 2;
 }
 SteelWall::~SteelWall()
 {
-    
+
 }
 
 Movable::Movable(FRKey key) : current_direction(key) 

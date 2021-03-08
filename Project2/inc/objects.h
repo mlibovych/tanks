@@ -20,9 +20,7 @@
 
 void drawSpriteWithBorder(Sprite* sprite, int x, int y);
 
-class Object {
-protected:
-	int health = 1;
+class Object {	
 public:
 	Object(Sprite *m_sprite);
 	virtual ~Object();
@@ -30,6 +28,8 @@ public:
 	virtual void Draw(int x, int y);
 
 	Sprite *sprite;
+
+	int health = 1;
 };
 
 class BrickWall : public Object {

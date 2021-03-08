@@ -39,10 +39,10 @@ void MyFramework::CreateTanks() {
 void MyFramework::CreateObjects() {
     objects["b1"] = std::make_shared<BrickWall> (sprites["b1"]);
     objects["b2"] = std::make_shared<BrickWall> (sprites["b2"]);
-    objects["s1"] = std::make_shared<BrickWall> (sprites["s1"]);
-    objects["s2"] = std::make_shared<BrickWall> (sprites["s2"]);
-    objects["s3"] = std::make_shared<BrickWall> (sprites["s3"]);
-    objects["s4"] = std::make_shared<BrickWall> (sprites["s4"]);
+    objects["s1"] = std::make_shared<SteelWall> (sprites["s1"]);
+    objects["s2"] = std::make_shared<SteelWall> (sprites["s2"]);
+    objects["s3"] = std::make_shared<SteelWall> (sprites["s3"]);
+    objects["s4"] = std::make_shared<SteelWall> (sprites["s4"]);
 }
 
 void MyFramework::LoadSprites() {
@@ -159,9 +159,13 @@ bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int e
 }
 
 bool MyFramework::HitWall(int row, int cell, int power) {
-    (void) power;
+    if (row < 0 || row >= 32 || cell < 0 || cell >= 32) {
+        return 1;
+    }
     if (map[row ][cell]) {
-        map[row ][cell] = nullptr;
+        if (map[row ][cell]->health <= power) {
+            map[row ][cell] = nullptr;
+        }
         return 1;
     }
     return 0;
@@ -310,7 +314,7 @@ Map MyFramework::GenerateMap() {
         }	
     }
 
-    for (int i = 12; i < 16; ++i) {
+    for (int i = 4; i < 8; ++i) {
         for (int j = 8; j < 12; ++j) {
             if (i % 2 == 0 && j % 2 == 0) {
                 map[i][j] = objects["s1"];

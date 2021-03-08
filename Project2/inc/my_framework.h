@@ -16,7 +16,7 @@ class MyFramework : public Framework {
 	std::shared_ptr<Tank> player;
 	std::unique_ptr<Essence> base;
 
-	std::unordered_map<std::string, std::shared_ptr<BrickWall>> objects;
+	std::unordered_map<std::string, std::shared_ptr<Object>> objects;
 	std::shared_ptr<BulletData> bullet_data;
 
 	Map map;
