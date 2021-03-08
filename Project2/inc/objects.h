@@ -44,6 +44,13 @@ public:
 	virtual ~SteelWall();
 };
 
+enum class Role {
+	PLAYER,
+	ENEMY,
+	BASE,
+	COUNT
+};
+
 class Essence {
 public:
 	Essence() = default;
@@ -53,7 +60,7 @@ public:
 
 	}
 	virtual ~Essence() {
-
+		
 	}
 
 	virtual void Draw();
@@ -64,13 +71,12 @@ public:
 	int y = 0;
 	int w = 64;
 	int h = 64;
+
+	int health = 1;
+
+	Role role;
 };
 
-enum class MType {
-	TANK,
-	BULLET,
-	COUNT
-};
 
 class Movable : public Essence {
 public:
@@ -96,8 +102,6 @@ public:
         {FRKey::UP, 0},
         {FRKey::DOWN, 0}
     };
-
-	MType m_type = MType::COUNT;
 	
 	int step_size = 1;
 };
@@ -155,14 +159,4 @@ public:
 
 	std::shared_ptr<TankType> type;
 	std::shared_ptr<Bullet> bullet;
-
-	int health;
-
-	bool enemy = true;
-};
-
-class Player : public Tank {
-public:
-	Player(FRKey key);
-	~Player();
 };

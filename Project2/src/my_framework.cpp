@@ -19,13 +19,12 @@ bool MyFramework::Init() {
     CreateTanks();
 
     //map generation
-    map = GenerateMap();
-    base = std::make_unique<Essence> (sprites["eagle"]);
-    base->x = 14 * CELL_SIZE;
-    base->y = 28 * CELL_SIZE; 
+    map = GenerateMap(); 
 
     //player creation
-    player = SpawnTank(tank_types["base"], 8, 28, FRKey::UP);
+    player = SpawnTank(tank_types["base"], 8, 28, FRKey::UP, Role::PLAYER);
+
+    SpawnTank(tank_types["base"], 0, 0, FRKey::DOWN, Role::ENEMY);
 
     //check result
     return true;
@@ -70,7 +69,9 @@ void MyFramework::DrawMap() {
             }
         }	
     }
-    base->Draw();
+    if (base) {
+        base->Draw();
+    }
 }
 
 bool MyFramework::Tick() {
@@ -78,25 +79,31 @@ bool MyFramework::Tick() {
     drawSpriteWithBorder(sprites["background"], 0, 0);
     //draw map
     DrawMap();
-    //move objects
+    //draw objects
     MoveBullets();
-    Move(player.get(), player->type->speed * 2);
+    
     //draw tanks
-    player->Draw();
-    //draw 
+    for(auto& tank : tanks) {
+        Move(tank.get(), tank->type->speed * 2);
+        tank->Draw();
+    }
+    //check state
+    if (!base || score >= GOAL) {
+        return true;
+    }
     return false;
 }
 
 void MyFramework::MoveBullets() {
     for (auto& [tank, bullet] : bullets) {
         if (bullet->active) {
-            MoveBullet(bullet.get(), tank->type->bullet_speed * BULLETS_SPEED, tank->type->power);
+            MoveBullet(bullet.get(), tank.get());
             bullet->Draw();
         }
     }
 }
 
-std::shared_ptr<Tank> MyFramework::SpawnTank(std::shared_ptr<TankType> type, int x, int y, FRKey key) {
+std::shared_ptr<Tank> MyFramework::SpawnTank(std::shared_ptr<TankType> type, int x, int y, FRKey key, Role role) {
     std::shared_ptr<Tank> tank = std::make_shared<Tank> (key);
     bullets[tank] = std::make_shared<Bullet> (bullet_data, key);
 
@@ -104,6 +111,8 @@ std::shared_ptr<Tank> MyFramework::SpawnTank(std::shared_ptr<TankType> type, int
     tank->y = y * CELL_SIZE;
     tank->SetType(type);
     tank->SetBullet(bullets[tank]);
+    tank->role = role;
+    tanks.push_back(tank);
     return tank;
 }
 
@@ -141,7 +150,11 @@ std::pair<int, int> MyFramework::GetExpectedCoords(FRKey k, int expected_x, int 
     return {row, cell};
 }
 
-bool MyFramework::CheckEssences(Movable *object, Essence *other, FRKey k, int expected_x, int expected_y) {
+bool MyFramework::CheckEssences(Movable *object, Essence *other, FRKey k,
+                                int expected_x, int expected_y) {
+    if (!other || other == object) {
+        return 0;
+    }
     int a_x0 = expected_x;
     int a_y0 = expected_y;
     int a_x1 = expected_x + object->w;
@@ -155,7 +168,6 @@ bool MyFramework::CheckEssences(Movable *object, Essence *other, FRKey k, int ex
     if (a_x0 >= b_x1 || a_x1 <= b_x0 || a_y0 >= b_y1 || a_y1 <= b_y0) {
         return 0;
     }
-
     return 1;
 }
 
@@ -163,8 +175,10 @@ bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int e
     if (CheckBorders(object, k, &expected_x, &expected_y)) {
         return 1;
     }
-    if (CheckEssences(object, base.get(), k, expected_x, expected_y)) {
-        return 1;
+    for (auto& tank : tanks) {
+        if (CheckEssences(object, tank.get(), k, expected_x, expected_y)) {
+            return 1;
+        }
     }
 
     auto [row, cell] = GetExpectedCoords(k, expected_x, expected_y);
@@ -201,12 +215,45 @@ bool MyFramework::HitWall(FRKey k, int row, int cell, int power, bool double_hit
     return 0;
 }
 
-bool MyFramework::CheckBulletCollision(Bullet *bullet, FRKey k, int expected_x, int expected_y, int power) {
+bool MyFramework::CheckBulletEssences(Bullet *bullet, Tank* tank, Essence *other, FRKey k,
+                                int expected_x, int expected_y) {
+    if (!other || tank->role == other->role) {
+        return 0;
+    }
+    int a_x0 = expected_x;
+    int a_y0 = expected_y;
+    int a_x1 = expected_x + bullet->w;
+    int a_y1 = expected_y + bullet->h;
+
+    int b_x0 = other->x;
+    int b_y0 = other->y;
+    int b_x1 = other->x + other->w;
+    int b_y1 = other->y + other->h;
+
+    if (a_x0 >= b_x1 || a_x1 <= b_x0 || a_y0 >= b_y1 || a_y1 <= b_y0) {
+        return 0;
+    }
+    return 1;
+}
+
+bool MyFramework::CheckBulletCollision(Bullet *bullet, Tank* tank, FRKey k, int expected_x, int expected_y) {
     if (CheckBorders(bullet, k, &expected_x, &expected_y)) {
         return 1;
     }
-    if (CheckEssences(bullet, base.get(), k, expected_x, expected_y)) {
-        return 1;
+    for (auto it = tanks.begin(); it != tanks.end(); it++) {
+        if (CheckBulletEssences(bullet, tank, it->get(), k, expected_x, expected_y)) {
+            (*it)->health -= tank->type->power;
+            if ((*it)->health <= 0) {
+                if (*it == player) {
+                    //Respawn;
+                }
+                else {
+                    score += 1;
+                }
+                tanks.erase(it);
+            }
+            return 1;
+        }
     }
     
     bool res = 0;
@@ -221,10 +268,10 @@ bool MyFramework::CheckBulletCollision(Bullet *bullet, FRKey k, int expected_x, 
 
     for (int i = 0; i < 4; i++) {
         if (k == FRKey::UP || k == FRKey::DOWN) {
-            res = HitWall(k, row, cell + i, power, 1) ? 1 : res;
+            res = HitWall(k, row, cell + i, tank->type->power, 1) ? 1 : res;
         }
         if (k == FRKey::LEFT || k == FRKey::RIGHT) {
-            res = HitWall(k, row + i, cell, power, 1) ? 1 : res;
+            res = HitWall(k, row + i, cell, tank->type->power, 1) ? 1 : res;
         }
     }
     return res;
@@ -277,21 +324,16 @@ void MyFramework::Move(Movable* object, int speed) {
     }
 }
 
-void MyFramework::MoveBullet(Bullet* bullet, int speed, int power) {
-    int frame = speed > MAX_SPEED ? GAME_SPEED / MAX_SPEED : GAME_SPEED / speed;
+void MyFramework::MoveBullet(Bullet* bullet, Tank* tank) {
+    int frame = tank->type->bullet_speed * BULLETS_SPEED > MAX_SPEED ? GAME_SPEED / MAX_SPEED : GAME_SPEED / (tank->type->bullet_speed *  BULLETS_SPEED);
     
-    for (const auto& [key, value] : bullet->directions) {
-        if (value == 1) {
-            if (getTickCount() % frame == 0) {
-                if (!CheckBulletCollision(bullet, key, bullet->x, bullet->y, power)) {
-                    bullet->Move(key);
-                }
-                else  {
-                    bullet->active = false;
-                    bullet->directions[bullet->current_direction] = 0;
-                }
-            }
-            break;
+    if (getTickCount() % frame == 0) {
+        if (!CheckBulletCollision(bullet, tank, bullet->current_direction, bullet->x, bullet->y)) {
+            bullet->Move(bullet->current_direction);
+        }
+        else  {
+            bullet->active = false;
+            bullet->directions[bullet->current_direction] = 0;
         }
     }
 }
@@ -354,6 +396,11 @@ Map MyFramework::GenerateMap() {
             }
         }	
     }
+
+    base = std::make_shared<Essence> (sprites["eagle"]);
+    base->x = 14 * CELL_SIZE;
+    base->y = 28 * CELL_SIZE;
+    base->role = Role::BASE;
 
     return map;
 }

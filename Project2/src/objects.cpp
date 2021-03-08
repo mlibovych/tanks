@@ -101,7 +101,6 @@ FRKey Movable::getDirection() {
 
 Tank::Tank(FRKey key) : Movable(key) 
 {	
-    m_type = MType::TANK;
     w = 64;
     h = 64;
 }
@@ -133,16 +132,16 @@ void Tank::Shoot() {
         bullet->x = x + w / 2 - bullet->w / 2;
         bullet->y = y + h / 2 - bullet->h / 2;
         if (current_direction == FRKey::RIGHT) {
-            bullet->x += w / 2 + 1;
+            bullet->x += w / 2 + + bullet->h / 2 - 1;
         }
         if (current_direction == FRKey::LEFT) {
-            bullet->x -= w / 2 - 1;
+            bullet->x -= w / 2 + + bullet->h / 2 - 1;
         }
         if (current_direction == FRKey::DOWN) {
-            bullet->y += h / 2 + 1;
+            bullet->y += h / 2 + + bullet->h / 2 - 1;
         }
         if (current_direction == FRKey::UP) {
-            bullet->y -= h / 2 - 1;
+            bullet->y -= h / 2 + bullet->h / 2 - 1;
         }
         bullet->directions[current_direction] = 1;
         bullet->current_direction = current_direction;
@@ -150,14 +149,6 @@ void Tank::Shoot() {
     }
 }
 
-
-Player::Player(FRKey key) : Tank(key) 
-{	
-    enemy = false;
-}
-Player::~Player() {
-
-}
 
 TankType::TankType() {
 
@@ -190,7 +181,6 @@ BulletData::~BulletData() {
 Bullet::Bullet(std::shared_ptr<BulletData> m_data, FRKey key) : Movable(key),
                                                                data(m_data)
 {
-    m_type = MType::BULLET;
     w = 16;
     h = 16;
     ChangeSprite(key);
