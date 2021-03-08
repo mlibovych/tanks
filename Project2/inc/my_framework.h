@@ -46,6 +46,8 @@ public:
 
 	bool CheckBulletCollision(Bullet *bullet, FRKey key, int expected_x, int expected_y, int power);
 
+	bool HitWall(int row, int cell, int power);
+
 	void Rotate(Movable* object, FRKey k);
 
 	void Move(Movable* object, int speed);

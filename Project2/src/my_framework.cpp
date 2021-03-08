@@ -158,42 +158,48 @@ bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int e
     return 0;
 }
 
+bool MyFramework::HitWall(int row, int cell, int power) {
+    (void) power;
+    if (map[row ][cell]) {
+        map[row ][cell] = nullptr;
+        return 1;
+    }
+    return 0;
+}
+
+// int x_add = 1;
+// int y_add = 1;
+// if (expected_x % CELL_SIZE != 0) {
+//     x_add += 1;
+// }
+// if (expected_y % CELL_SIZE != 0) {
+//     y_add += 1;
+// }
+
 bool MyFramework::CheckBulletCollision(Bullet *bullet, FRKey k, int expected_x, int expected_y, int power) {
     if (CheckBorders(bullet, k, &expected_x, &expected_y)) {
         return 1;
     }
-
-    int x_add = 1;
-    int y_add = 1;
     bool res = 0;
 
     auto [row, cell] = GetExpectedCoords(k, expected_x, expected_y);
 
-    if (expected_x % CELL_SIZE != 0) {
-        x_add += 1;
+    if (k == FRKey::UP || k == FRKey::DOWN) {
+        cell -= 1;
     }
-    if (expected_y % CELL_SIZE != 0) {
-        y_add += 1;
+    if (k == FRKey::LEFT || k == FRKey::RIGHT) {
+        row -= 1;
     }
 
-    
-    for (int i = 0; i < y_add; i++) {
-        for (int j = 0; j < x_add; j++) {
-            if (map[row + i][cell + j]) {
-                if (k == FRKey::UP) {
-                    if (j == 0) {
-                        map[row + i][cell + j - 1] = nullptr;
-                    }
-                    else {
-                        map[row + i][cell + j + 1] = nullptr;
-                    }
-                }
-                map[row + i][cell + j] = nullptr;
-                res =  1;
-            }
+    for (int i = 0; i < 4; i++) {
+        if (k == FRKey::UP || k == FRKey::DOWN) {
+            res = HitWall(row, cell + i, power) ? 1 : res;
         }
+        if (k == FRKey::LEFT || k == FRKey::RIGHT) {
+            res = HitWall(row + i, cell, power) ? 1 : res;
+        }
+        
     }
-    power = 0;
     return res;
 }
 
