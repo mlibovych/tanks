@@ -183,6 +183,7 @@ Bullet::Bullet(std::shared_ptr<BulletData> m_data, FRKey key) : Movable(key),
 {
     w = 16;
     h = 16;
+    role = Role::BULLET;
     ChangeSprite(key);
 }
 
@@ -195,7 +196,7 @@ void Bullet::ChangeSprite(FRKey k) {
 }
 
 
-BaseTank::BaseTank() : TankType() {
+PlayerBaseTank::PlayerBaseTank() : TankType() {
     even = {
         {FRKey::UP, createSprite("Project2/data/u_even.png")},
         {FRKey::LEFT, createSprite("Project2/data/l_even.png")},
@@ -208,7 +209,7 @@ BaseTank::BaseTank() : TankType() {
         {FRKey::DOWN, createSprite("Project2/data/d_odd.png")},
         {FRKey::RIGHT, createSprite("Project2/data/r_odd.png")}
     };
-    speed = 1;
+    speed = 2;
     max_health = 1;
     bullet_speed = 1;
     power = 1;

@@ -19,20 +19,19 @@ bool MyFramework::Init() {
     CreateTanks();
 
     //map generation
-    map = GenerateMap(); 
+    GenerateMap(); 
 
     //player creation
-    player = SpawnTank(tank_types["base"], 8, 28, FRKey::UP, Role::PLAYER);
+    player = SpawnTank(tank_types["player_base"], 7, 28, FRKey::UP, Role::PLAYER);
 
-    SpawnTank(tank_types["base"], 0, 0, FRKey::DOWN, Role::ENEMY);
+    SpawnTank(tank_types["player_base"], 0, 0, FRKey::DOWN, Role::ENEMY);
 
-    //check result
     return true;
 }
 
 void MyFramework::CreateTanks() {
     bullet_data = std::make_shared<BulletData> ();
-    tank_types["base"] = std::make_shared<BaseTank> ();
+    tank_types["player_base"] = std::make_shared<PlayerBaseTank> ();
 }
 
 void MyFramework::CreateObjects() {
@@ -74,7 +73,25 @@ void MyFramework::DrawMap() {
     }
 }
 
+void MyFramework::UpdateData() {
+    for (auto it = tanks.begin(); it != tanks.end(); it++) {
+        if (it->get()->health <= 0) {
+            if (it->get()->role == Role::PLAYER) {
+                //Respawn();
+                std::cout << "respawn" << std::endl;
+            }
+            else {
+                tanks.erase(it);
+            }
+        }
+    }
+    if (base->health <= 0) {
+        base = nullptr;
+    }
+}
+
 bool MyFramework::Tick() {
+    UpdateData();
     //draw background
     drawSpriteWithBorder(sprites["background"], 0, 0);
     //draw map
@@ -84,7 +101,7 @@ bool MyFramework::Tick() {
     
     //draw tanks
     for(auto& tank : tanks) {
-        Move(tank.get(), tank->type->speed * 2);
+        Move(tank.get(), tank->type->speed);
         tank->Draw();
     }
     //check state
@@ -97,7 +114,7 @@ bool MyFramework::Tick() {
 void MyFramework::MoveBullets() {
     for (auto& [tank, bullet] : bullets) {
         if (bullet->active) {
-            MoveBullet(bullet.get(), tank.get());
+            MoveBullet(bullet.get(), tank);
             bullet->Draw();
         }
     }
@@ -180,6 +197,9 @@ bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int e
             return 1;
         }
     }
+    if (CheckEssences(object, base.get(), k, expected_x, expected_y)) {
+        return 1;
+    }
 
     auto [row, cell] = GetExpectedCoords(k, expected_x, expected_y);
 
@@ -233,27 +253,29 @@ bool MyFramework::CheckBulletEssences(Bullet *bullet, Tank* tank, Essence *other
     if (a_x0 >= b_x1 || a_x1 <= b_x0 || a_y0 >= b_y1 || a_y1 <= b_y0) {
         return 0;
     }
+    other->health -= tank->type->power;
+    // std::cout << other->health << std::endl;
     return 1;
+}
+
+bool MyFramework::DealDamage(Bullet *bullet, Tank* tank, FRKey k, int expected_x, int expected_y) {
+    for (auto it = tanks.begin(); it != tanks.end(); it++) {
+        if (CheckBulletEssences(bullet, tank, it->get(), k, expected_x, expected_y)) {
+            return 1;
+        }
+    }
+    if (CheckBulletEssences(bullet, tank, base.get(), k, expected_x, expected_y)) {
+        return 1;
+    }
+    return 0;
 }
 
 bool MyFramework::CheckBulletCollision(Bullet *bullet, Tank* tank, FRKey k, int expected_x, int expected_y) {
     if (CheckBorders(bullet, k, &expected_x, &expected_y)) {
         return 1;
     }
-    for (auto it = tanks.begin(); it != tanks.end(); it++) {
-        if (CheckBulletEssences(bullet, tank, it->get(), k, expected_x, expected_y)) {
-            (*it)->health -= tank->type->power;
-            if ((*it)->health <= 0) {
-                if (*it == player) {
-                    //Respawn;
-                }
-                else {
-                    score += 1;
-                }
-                tanks.erase(it);
-            }
-            return 1;
-        }
+    if (DealDamage(bullet, tank, k, expected_x, expected_y)) {
+        return 1;
     }
     
     bool res = 0;
@@ -285,19 +307,19 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
     if (object->current_direction != k) {
         if (k == FRKey::RIGHT || k == FRKey::LEFT) {
             if (object->current_direction == FRKey::DOWN) {
-                expected_y += (CELL_SIZE * 2)  - object->y % (CELL_SIZE * 2);
+                expected_y += (CELL_SIZE * 1)  - object->y % (CELL_SIZE * 1);
             }
             else if (object->current_direction == FRKey::UP) {
                 
-                expected_y -= object->y % (CELL_SIZE * 2);
+                expected_y -= object->y % (CELL_SIZE * 1);
             }
         }
         else {
             if (object->current_direction == FRKey::RIGHT) {
-                expected_x += (CELL_SIZE * 2) - object->x % (CELL_SIZE * 2);
+                expected_x += (CELL_SIZE * 1) - object->x % (CELL_SIZE * 1);
             }
             else if (object->current_direction == FRKey::LEFT) {
-                expected_x -= object->x % (CELL_SIZE * 2);
+                expected_x -= object->x % (CELL_SIZE * 1);
             }
         }
         if (!CheckCollision(object, k, expected_x, expected_y)) {
@@ -324,16 +346,19 @@ void MyFramework::Move(Movable* object, int speed) {
     }
 }
 
-void MyFramework::MoveBullet(Bullet* bullet, Tank* tank) {
+void MyFramework::MoveBullet(Bullet* bullet, std::shared_ptr<Tank> tank) {
     int frame = tank->type->bullet_speed * BULLETS_SPEED > MAX_SPEED ? GAME_SPEED / MAX_SPEED : GAME_SPEED / (tank->type->bullet_speed *  BULLETS_SPEED);
     
     if (getTickCount() % frame == 0) {
-        if (!CheckBulletCollision(bullet, tank, bullet->current_direction, bullet->x, bullet->y)) {
+        if (!CheckBulletCollision(bullet, tank.get(), bullet->current_direction, bullet->x, bullet->y)) {
             bullet->Move(bullet->current_direction);
         }
         else  {
             bullet->active = false;
             bullet->directions[bullet->current_direction] = 0;
+            if (std::find(tanks.begin(), tanks.end(), tank) == tanks.end()) {
+                bullets.erase(tank);
+            }
         }
     }
 }
@@ -361,46 +386,55 @@ const char* MyFramework::GetTitle()
     return "Tanks";
 }
 
-Map MyFramework::GenerateMap() {
-    Map map;
+void MyFramework::CreateBrick(int row, int cell) {
+    if ((row % 2 == 0 && cell % 2 != 0) || (row % 2 != 0 && cell % 2 == 0)) {
+        map[row][cell] = objects["b1"];
+    }
+    else {
+        map[row][cell] = objects["b2"];
+    }
+}
+
+void MyFramework::CreateSteel(int row, int cell) {
+    if (row % 2 == 0 && cell % 2 == 0) {
+        map[row][cell] = objects["s1"];
+    }
+    else if (row % 2 == 0 && cell % 2 != 0) {
+        map[row][cell] = objects["s2"];
+    }
+    else if (row % 2 != 0 && cell % 2 == 0) {
+        map[row][cell] = objects["s3"];
+    }
+    else {
+        map[row][cell] = objects["s4"];
+    }
+}
+
+void MyFramework::CreateBase(int row, int cell) {
+    base = std::make_shared<Essence> (sprites["eagle"]);
+    base->x = cell * CELL_SIZE;
+    base->y = row * CELL_SIZE;
+    base->role = Role::BASE;
+}
+
+void MyFramework::GenerateMap() {
     std::fstream file("Project2/data/MAP.txt");
     std::string line;
 
-    while(std::getline(file, line)) {
-
+    for (int i = 0; i < 32; ++i) {
+        std::getline(file, line);
+        for (int j = 0; j < 32; ++j) {
+            switch (line[j]) {
+            case 'b':
+                CreateBrick(i, j);
+                break;
+            case 's':
+                CreateSteel(i, j);
+                break;
+            case 'f':
+                CreateBase(i, j);
+                break;
+            }
+        }
     }
-    for (int i = 28; i < 32; ++i) {
-        for (int j = 4; j < 8; ++j) {
-            if ((i % 2 == 0 && j % 2 != 0) || (i % 2 != 0 && j % 2 == 0)) {
-                map[i][j] = objects["b1"];
-            }
-            else {
-                map[i][j] = objects["b2"];
-            }
-        }	
-    }
-
-    for (int i = 12; i < 16; ++i) {
-        for (int j = 8; j < 12; ++j) {
-            if (i % 2 == 0 && j % 2 == 0) {
-                map[i][j] = objects["s1"];
-            }
-            else if (i % 2 == 0 && j % 2 != 0) {
-                map[i][j] = objects["s2"];
-            }
-            else if (i % 2 != 0 && j % 2 == 0) {
-                map[i][j] = objects["s3"];
-            }
-            else {
-                map[i][j] = objects["s4"];
-            }
-        }	
-    }
-
-    base = std::make_shared<Essence> (sprites["eagle"]);
-    base->x = 14 * CELL_SIZE;
-    base->y = 28 * CELL_SIZE;
-    base->role = Role::BASE;
-
-    return map;
 }

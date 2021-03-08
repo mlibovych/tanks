@@ -48,6 +48,7 @@ enum class Role {
 	PLAYER,
 	ENEMY,
 	BASE,
+	BULLET,
 	COUNT
 };
 
@@ -128,9 +129,9 @@ public:
 	std::unordered_map<FRKey, Sprite *> sprites;
 };
 
-class BaseTank : public TankType {
+class PlayerBaseTank : public TankType {
 public:
-	BaseTank();
+	PlayerBaseTank();
 };
 
 class Bullet : public Movable {

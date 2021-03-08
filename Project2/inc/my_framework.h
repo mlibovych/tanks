@@ -1,9 +1,11 @@
 #pragma once
 
 #include <fstream>
+#include <sstream>
 #include <optional>
 #include <vector>
 #include <list>
+#include <algorithm>
 
 #include "Framework.h"
 #include "objects.h"
@@ -60,13 +62,15 @@ public:
 
 	bool CheckBulletCollision(Bullet *bullet, Tank* tank, FRKey key, int expected_x, int expected_y);
 
+	bool DealDamage(Bullet *bullet, Tank* tank, FRKey k, int expected_x, int expected_y);
+
 	bool HitWall(FRKey k, int row, int cell, int power, bool double_hit);
 
 	void Rotate(Movable* object, FRKey k);
 
 	void Move(Movable* object, int speed);
 
-	void MoveBullet(Bullet* bullet, Tank* tank);
+	void MoveBullet(Bullet* bullet, std::shared_ptr<Tank> tank);
 
 	virtual void onMouseMove(int x, int y, int xrelative, int yrelative);
 
@@ -78,7 +82,13 @@ public:
 
 	virtual const char* GetTitle() override;
 
-	Map GenerateMap();
+	void GenerateMap();
+
+	void CreateBrick(int row, int cell);
+
+	void CreateSteel(int row, int cell);
+
+	void CreateBase(int row, int cell);
 
 	void LoadSprites();
 
@@ -87,5 +97,7 @@ public:
 	void CreateTanks();
 
 	void MoveBullets();
+
+	void UpdateData();
 
 };
