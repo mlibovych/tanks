@@ -35,17 +35,13 @@ public:
 class BrickWall : public Object {
 public:
 	BrickWall(Sprite *m_sprite);
-	virtual ~BrickWall();
-
-	int power = 1;	
+	virtual ~BrickWall();	
 };
 
 class SteelWall : public Object {
 public:
 	SteelWall(Sprite *m_sprite);
 	virtual ~SteelWall();
-
-	int power = 4;
 };
 
 class Essence {
@@ -66,8 +62,8 @@ public:
 
 	int x = 0;
 	int y = 0;
-	int w = 0;
-	int h = 0;
+	int w = 64;
+	int h = 64;
 };
 
 enum class MType {

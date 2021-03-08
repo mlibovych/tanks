@@ -42,11 +42,13 @@ public:
 
 	bool CheckBorders(Movable *object, FRKey k, int* expected_x, int* expected_y);
 
+	bool CheckEssences(Movable *object, Essence *other, FRKey k, int expected_x, int expected_y);
+
 	bool CheckCollision(Movable *object, FRKey k, int expected_x, int expected_y);
 
 	bool CheckBulletCollision(Bullet *bullet, FRKey key, int expected_x, int expected_y, int power);
 
-	bool HitWall(int row, int cell, int power);
+	bool HitWall(FRKey k, int row, int cell, int power, bool double_hit);
 
 	void Rotate(Movable* object, FRKey k);
 

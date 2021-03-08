@@ -141,8 +141,29 @@ std::pair<int, int> MyFramework::GetExpectedCoords(FRKey k, int expected_x, int 
     return {row, cell};
 }
 
+bool MyFramework::CheckEssences(Movable *object, Essence *other, FRKey k, int expected_x, int expected_y) {
+    int a_x0 = expected_x;
+    int a_y0 = expected_y;
+    int a_x1 = expected_x + object->w;
+    int a_y1 = expected_y + object->h;
+
+    int b_x0 = other->x;
+    int b_y0 = other->y;
+    int b_x1 = other->x + other->w;
+    int b_y1 = other->y + other->h;
+
+    if (a_x0 >= b_x1 || a_x1 <= b_x0 || a_y0 >= b_y1 || a_y1 <= b_y0) {
+        return 0;
+    }
+
+    return 1;
+}
+
 bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int expected_y) {
     if (CheckBorders(object, k, &expected_x, &expected_y)) {
+        return 1;
+    }
+    if (CheckEssences(object, base.get(), k, expected_x, expected_y)) {
         return 1;
     }
 
@@ -158,34 +179,37 @@ bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int e
     return 0;
 }
 
-bool MyFramework::HitWall(int row, int cell, int power) {
+bool MyFramework::HitWall(FRKey k, int row, int cell, int power, bool double_hit) {
     if (row < 0 || row >= 32 || cell < 0 || cell >= 32) {
         return 1;
     }
     if (map[row ][cell]) {
         if (map[row ][cell]->health <= power) {
             map[row ][cell] = nullptr;
+            if (power == 2 && double_hit) {
+                if (k == FRKey::DOWN || k == FRKey::UP) {
+                    row += k == FRKey::DOWN ? 1 : -1;
+                }
+                if (k == FRKey::RIGHT || k == FRKey::LEFT) {
+                    cell += k == FRKey::RIGHT ? 1 : -1;
+                }
+                HitWall(k, row, cell, power, 0);
+            }
         }
         return 1;
     }
     return 0;
 }
 
-// int x_add = 1;
-// int y_add = 1;
-// if (expected_x % CELL_SIZE != 0) {
-//     x_add += 1;
-// }
-// if (expected_y % CELL_SIZE != 0) {
-//     y_add += 1;
-// }
-
 bool MyFramework::CheckBulletCollision(Bullet *bullet, FRKey k, int expected_x, int expected_y, int power) {
     if (CheckBorders(bullet, k, &expected_x, &expected_y)) {
         return 1;
     }
+    if (CheckEssences(bullet, base.get(), k, expected_x, expected_y)) {
+        return 1;
+    }
+    
     bool res = 0;
-
     auto [row, cell] = GetExpectedCoords(k, expected_x, expected_y);
 
     if (k == FRKey::UP || k == FRKey::DOWN) {
@@ -197,12 +221,11 @@ bool MyFramework::CheckBulletCollision(Bullet *bullet, FRKey k, int expected_x, 
 
     for (int i = 0; i < 4; i++) {
         if (k == FRKey::UP || k == FRKey::DOWN) {
-            res = HitWall(row, cell + i, power) ? 1 : res;
+            res = HitWall(k, row, cell + i, power, 1) ? 1 : res;
         }
         if (k == FRKey::LEFT || k == FRKey::RIGHT) {
-            res = HitWall(row + i, cell, power) ? 1 : res;
+            res = HitWall(k, row + i, cell, power, 1) ? 1 : res;
         }
-        
     }
     return res;
 }
@@ -217,7 +240,8 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
             if (object->current_direction == FRKey::DOWN) {
                 expected_y += (CELL_SIZE * 2)  - object->y % (CELL_SIZE * 2);
             }
-            else {
+            else if (object->current_direction == FRKey::UP) {
+                
                 expected_y -= object->y % (CELL_SIZE * 2);
             }
         }
@@ -225,7 +249,7 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
             if (object->current_direction == FRKey::RIGHT) {
                 expected_x += (CELL_SIZE * 2) - object->x % (CELL_SIZE * 2);
             }
-            else {
+            else if (object->current_direction == FRKey::LEFT) {
                 expected_x -= object->x % (CELL_SIZE * 2);
             }
         }
@@ -303,7 +327,7 @@ Map MyFramework::GenerateMap() {
     while(std::getline(file, line)) {
 
     }
-    for (int i = 4; i < 8; ++i) {
+    for (int i = 28; i < 32; ++i) {
         for (int j = 4; j < 8; ++j) {
             if ((i % 2 == 0 && j % 2 != 0) || (i % 2 != 0 && j % 2 == 0)) {
                 map[i][j] = objects["b1"];
@@ -314,7 +338,7 @@ Map MyFramework::GenerateMap() {
         }	
     }
 
-    for (int i = 4; i < 8; ++i) {
+    for (int i = 12; i < 16; ++i) {
         for (int j = 8; j < 12; ++j) {
             if (i % 2 == 0 && j % 2 == 0) {
                 map[i][j] = objects["s1"];
