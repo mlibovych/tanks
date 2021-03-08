@@ -38,15 +38,19 @@ public:
 
 	std::shared_ptr<Tank> SpawnTank(std::shared_ptr<TankType> type, int x, int y, FRKey key);
 
-	bool CheckCollision(Movable *object, FRKey k, int expected_x, int expected_y, std::optional<int> power);
+	std::pair<int, int> GetExpectedCoords(FRKey k, int expected_x, int expected_y);
+
+	bool CheckBorders(Movable *object, FRKey k, int* expected_x, int* expected_y);
+
+	bool CheckCollision(Movable *object, FRKey k, int expected_x, int expected_y);
 
 	bool CheckBulletCollision(Bullet *bullet, FRKey key, int expected_x, int expected_y, int power);
 
-	bool CheckTankCollision(Tank *object, FRKey k, int expected_x, int expected_y);
-
 	void Rotate(Movable* object, FRKey k);
 
-	void Move(Movable* object, int speed, std::optional<int> power);
+	void Move(Movable* object, int speed);
+
+	void MoveBullet(Bullet* bullet, int speed, int power);
 
 	virtual void onMouseMove(int x, int y, int xrelative, int yrelative);
 

@@ -80,7 +80,7 @@ bool MyFramework::Tick() {
     DrawMap();
     //move objects
     MoveBullets();
-    Move(player.get(), player->type->speed * 2, std::nullopt);
+    Move(player.get(), player->type->speed * 2);
     //draw tanks
     player->Draw();
     //draw 
@@ -90,7 +90,7 @@ bool MyFramework::Tick() {
 void MyFramework::MoveBullets() {
     for (auto& [tank, bullet] : bullets) {
         if (bullet->active) {
-            Move(bullet.get(), tank->type->bullet_speed * BULLETS_SPEED, tank->type->power);
+            MoveBullet(bullet.get(), tank->type->bullet_speed * BULLETS_SPEED, tank->type->power);
             bullet->Draw();
         }
     }
@@ -107,41 +107,46 @@ std::shared_ptr<Tank> MyFramework::SpawnTank(std::shared_ptr<TankType> type, int
     return tank;
 }
 
-bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int expected_y, std::optional<int> power) {
+bool MyFramework::CheckBorders(Movable *object, FRKey k, int* expected_x, int* expected_y) {
     int sign = k == FRKey::LEFT || k == FRKey::UP ? -1 : 1;
 
     if (k == FRKey::RIGHT || k == FRKey::LEFT) {
-        expected_x += object->step_size * sign;
+        *expected_x += object->step_size * sign;
     }
     else {
-        expected_y += object->step_size * sign;
+        *expected_y += object->step_size * sign;
     }
-    if (expected_x < 0 ||
-        expected_x > map_w - object->w) {
+    if (*expected_x < 0 ||
+        *expected_x > map_w - object->w) {
         return 1;
     }
-    if (expected_y < 0 ||
-        expected_y > map_h - object->h) {
+    if (*expected_y < 0 ||
+        *expected_y > map_h - object->h) {
         return 1;
     }
-
-    if (power) {
-        return CheckBulletCollision(static_cast<Bullet *> (object), k, expected_x, expected_y, *power);
-    }
-    else {
-        return CheckTankCollision(static_cast<Tank *> (object), k, expected_x, expected_y);
-    }
+    return 0;
 }
 
-bool MyFramework::CheckTankCollision(Tank *object, FRKey k, int expected_x, int expected_y) {
+std::pair<int, int> MyFramework::GetExpectedCoords(FRKey k, int expected_x, int expected_y) {
     int row = expected_y / CELL_SIZE;
     int cell = expected_x / CELL_SIZE;
+
     if (k == FRKey::RIGHT) {
         cell += expected_x / CELL_SIZE == 0 && expected_x > CELL_SIZE ? 0 : 1;
     }
     if (k == FRKey::DOWN) {
         row += expected_y / CELL_SIZE == 0 && expected_y > CELL_SIZE ? 0 : 1;
     }
+
+    return {row, cell};
+}
+
+bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int expected_y) {
+    if (CheckBorders(object, k, &expected_x, &expected_y)) {
+        return 1;
+    }
+
+    auto [row, cell] = GetExpectedCoords(k, expected_x, expected_y);
 
     for (int i = 0; i < object->h / CELL_SIZE; i++) {
         for (int j = 0; j < object->w / CELL_SIZE; j++) {
@@ -154,34 +159,42 @@ bool MyFramework::CheckTankCollision(Tank *object, FRKey k, int expected_x, int 
 }
 
 bool MyFramework::CheckBulletCollision(Bullet *bullet, FRKey k, int expected_x, int expected_y, int power) {
-    int row = expected_y / CELL_SIZE;
-    int cell = expected_x / CELL_SIZE;
-    int x_add = 0;
-    int y_add = 0;
+    if (CheckBorders(bullet, k, &expected_x, &expected_y)) {
+        return 1;
+    }
 
-    if (k == FRKey::RIGHT) {
-        cell += expected_x / CELL_SIZE == 0 && expected_x > CELL_SIZE ? 0 : 1;
-    }
-    if (k == FRKey::DOWN) {
-        row += expected_y / CELL_SIZE == 0 && expected_y > CELL_SIZE ? 0 : 1;
-    }
+    int x_add = 1;
+    int y_add = 1;
+    bool res = 0;
+
+    auto [row, cell] = GetExpectedCoords(k, expected_x, expected_y);
 
     if (expected_x % CELL_SIZE != 0) {
-        x_add = 1;
+        x_add += 1;
     }
     if (expected_y % CELL_SIZE != 0) {
-        y_add = 1;
+        y_add += 1;
     }
 
-    for (int i = 0; i < bullet->h / CELL_SIZE + y_add; i++) {
-        for (int j = 0; j < bullet->w / CELL_SIZE + x_add; j++) {
+    
+    for (int i = 0; i < y_add; i++) {
+        for (int j = 0; j < x_add; j++) {
             if (map[row + i][cell + j]) {
-                return 1;
+                if (k == FRKey::UP) {
+                    if (j == 0) {
+                        map[row + i][cell + j - 1] = nullptr;
+                    }
+                    else {
+                        map[row + i][cell + j + 1] = nullptr;
+                    }
+                }
+                map[row + i][cell + j] = nullptr;
+                res =  1;
             }
         }
     }
     power = 0;
-    return 0;
+    return res;
 }
 
 void MyFramework::Rotate(Movable* object, FRKey k) {
@@ -206,7 +219,7 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
                 expected_x -= object->x % (CELL_SIZE * 2);
             }
         }
-        if (!CheckCollision(object, k, expected_x, expected_y, std::nullopt)) {
+        if (!CheckCollision(object, k, expected_x, expected_y)) {
             object->x = expected_x;
             object->y = expected_y;
         }
@@ -214,21 +227,32 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
     }
 }
 
-void MyFramework::Move(Movable* object, int speed, std::optional<int> power) {
+void MyFramework::Move(Movable* object, int speed) {
     int frame = speed > MAX_SPEED ? GAME_SPEED / MAX_SPEED : GAME_SPEED / speed;
     
     for (const auto& [key, value] : object->directions) {
         if (value == 1) {
-            if (!power) {
-                Rotate(object, key);
-            }
+            Rotate(object, key);
             if (getTickCount() % frame == 0) {
-                if (!CheckCollision(object, key, object->x, object->y, power)) {
+                if (!CheckCollision(object, key, object->x, object->y)) {
                     object->Move(key);
                 }
-                else if (power) {
-                    Bullet *bullet = static_cast<Bullet *> (object);
+            }
+            break;
+        }
+    }
+}
 
+void MyFramework::MoveBullet(Bullet* bullet, int speed, int power) {
+    int frame = speed > MAX_SPEED ? GAME_SPEED / MAX_SPEED : GAME_SPEED / speed;
+    
+    for (const auto& [key, value] : bullet->directions) {
+        if (value == 1) {
+            if (getTickCount() % frame == 0) {
+                if (!CheckBulletCollision(bullet, key, bullet->x, bullet->y, power)) {
+                    bullet->Move(key);
+                }
+                else  {
                     bullet->active = false;
                     bullet->directions[bullet->current_direction] = 0;
                 }
