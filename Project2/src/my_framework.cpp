@@ -27,9 +27,6 @@ bool MyFramework::Init() {
 
     //player creation
     player = SpawnTank(tank_types["player_base"], 8, 28, FRKey::UP, Role::PLAYER);
-
-    SpawnTank(tank_types["player_base"], 1, 1, FRKey::DOWN, Role::ENEMY);
-    SpawnTank(tank_types["player_base"], 28, 0, FRKey::DOWN, Role::ENEMY);
     return true;
 }
 
@@ -71,6 +68,9 @@ void MyFramework::Draw(Essence* essence) {
 }
 
 void MyFramework::DrawMap() {
+    //draw background
+    drawSpriteWithBorder(sprites["background"], 0, 0);
+
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
             if (map[i][j]) {
@@ -162,11 +162,16 @@ void MyFramework::MoveTanks() {
 }
 
 void MyFramework::Spawn() {
-    bool can_spawn = 1;
+    if (getTickCount() % 4000 == 0 && tanks.size() < MAX_TANKS_ON_BOARD) {
+        SpawnTank(tank_types["player_base"], 0, 0, FRKey::UP, Role::ENEMY);
+    }
     for (auto spawn_it = spawning.begin(); spawn_it != spawning.end(); ++spawn_it) {
+        bool can_spawn = 1;
+
         for (auto& tank : tanks) {
             if (CheckEssences(spawn_it->get(), tank.get(), spawn_it->get()->x, spawn_it->get()->y)) {
                 can_spawn = 0;
+                break;
             }
         }
         if (can_spawn) {
@@ -180,8 +185,6 @@ bool MyFramework::Tick() {
     UpdateData();
     //spawn enamys;
     Spawn();
-    //draw background
-    drawSpriteWithBorder(sprites["background"], 0, 0);
     //draw map
     DrawMap();
     //draw objects
@@ -350,7 +353,7 @@ bool MyFramework::HitWall(FRKey k, int row, int cell, int power, bool double_hit
 
 bool MyFramework::CheckBulletEssences(Bullet *bullet, Tank* tank, Essence *other, FRKey k,
                                 int expected_x, int expected_y) {
-    if (!other || tank->role == other->role) {
+    if (!other) {
         return 0;
     }
     int a_x0 = expected_x;
@@ -372,7 +375,9 @@ bool MyFramework::CheckBulletEssences(Bullet *bullet, Tank* tank, Essence *other
 
 bool MyFramework::DealDamage(Bullet *bullet, Tank* tank, FRKey k, int expected_x, int expected_y) {
     for (auto it = tanks.begin(); it != tanks.end(); it++) {
-        if (CheckBulletEssences(bullet, tank, it->get(), k, expected_x, expected_y)) {
+        if (tank->role != it->get()->role &&
+            CheckBulletEssences(bullet, tank, it->get(), k, expected_x, expected_y))
+        {
             return 1;
         }
     }
