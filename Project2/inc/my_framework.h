@@ -7,6 +7,7 @@
 #include <list>
 #include <algorithm>
 #include <random>
+#include <queue>
 
 #include "Framework.h"
 #include "objects.h"
@@ -27,6 +28,7 @@ class MyFramework : public Framework {
 	std::unordered_map<std::string, std::shared_ptr<Object>> objects;
 	std::shared_ptr<BulletData> bullet_data;
 	std::list<std::shared_ptr<Tank>> tanks;
+	std::list<std::shared_ptr<Tank>> spawning;
 
 	Map map;
 
@@ -46,6 +48,8 @@ public:
 
 	void DrawMap();
 
+	void Spawn();
+
 	virtual bool Tick();
 
 	std::shared_ptr<Tank> SpawnTank(std::shared_ptr<TankType> type, int x, int y, FRKey key, Role role);
@@ -54,7 +58,7 @@ public:
 
 	bool CheckBorders(Movable *object, FRKey k, int* expected_x, int* expected_y);
 
-	bool CheckEssences(Movable *object, Essence *other, FRKey k,
+	bool CheckEssences(Movable *object, Essence *other,
 						int expected_x, int expected_y);
 	
 	bool CheckBulletEssences(Bullet *bullet, Tank* tank, Essence *other, FRKey k,
@@ -105,6 +109,8 @@ public:
 	void Fire(Tank *tank);
 
 	void MoveTanks();
+
+	void Respawn();
 
 	void UpdateData();
 };

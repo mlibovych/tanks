@@ -52,6 +52,8 @@ void MyFramework::LoadSprites() {
     sprites["s3"] = createSprite("Project2/data/s3.png");
     sprites["s4"] = createSprite("Project2/data/s4.png");
     sprites["eagle"] = createSprite("Project2/data/eagle.png");
+    sprites["flag"] = createSprite("Project2/data/flag.png");
+
 }
 
 void MyFramework::Close() {
@@ -73,13 +75,16 @@ void MyFramework::DrawMap() {
     }
 }
 
+void MyFramework::Respawn() {
+    health -= 1;
+    player = SpawnTank(tank_types["player_base"], 8, 28, FRKey::UP, Role::PLAYER);
+}
+
 void MyFramework::UpdateData() {
     for (auto it = tanks.begin(); it != tanks.end(); it++) {
         if (it->get()->health <= 0) {
             if (it->get()->role == Role::PLAYER) {
-                //Respawn();
-                std::cout << "respawn" << std::endl;
-                health -= 1;
+                Respawn();
             }
             else {
                 score += 1;
@@ -87,9 +92,6 @@ void MyFramework::UpdateData() {
             tanks.erase(it);
 
         }
-    }
-    if (base->health <= 0) {
-        // change sprite
     }
 }
 
@@ -149,10 +151,25 @@ void MyFramework::MoveTanks() {
     }
 }
 
+void MyFramework::Spawn() {
+    bool can_spawn = 1;
+    for (auto spawn_it = spawning.begin(); spawn_it != spawning.end(); ++spawn_it) {
+        for (auto& tank : tanks) {
+            if (CheckEssences(spawn_it->get(), tank.get(), spawn_it->get()->x, spawn_it->get()->y)) {
+                can_spawn = 0;
+            }
+        }
+        if (can_spawn) {
+            tanks.push_back(*spawn_it);
+            spawning.erase(spawn_it);
+        }  
+    } 
+}
+
 bool MyFramework::Tick() {
     UpdateData();
     //spawn enamys;
-    //Spawn();
+    Spawn();
     //draw background
     drawSpriteWithBorder(sprites["background"], 0, 0);
     //draw map
@@ -163,12 +180,14 @@ bool MyFramework::Tick() {
     MoveTanks();
     //check state
     if (base->health <= 0 || health <= 0) {
-        std::cout << "Defeat" << std::endl;
-        return true;
+        //Defeat
+        // std::cout << "Defeat" << std::endl;
+        // return true;
     }
     if (score >= GOAL) {
-        std::cout << "Victory" << std::endl;
-        return true;
+        //Victory
+        // std::cout << "Victory" << std::endl;
+        // return true;
     }
     return false;
 }
@@ -194,7 +213,7 @@ std::shared_ptr<Tank> MyFramework::SpawnTank(std::shared_ptr<TankType> type, int
     if (role == Role::ENEMY) {
         tank->Start(key);
     }
-    tanks.push_back(tank);
+    spawning.push_back(tank);
     return tank;
 }
 
@@ -232,7 +251,7 @@ std::pair<int, int> MyFramework::GetExpectedCoords(FRKey k, int expected_x, int 
     return {row, cell};
 }
 
-bool MyFramework::CheckEssences(Movable *object, Essence *other, FRKey k,
+bool MyFramework::CheckEssences(Movable *object, Essence *other,
                                 int expected_x, int expected_y) {
     if (!other || other == object) {
         return 0;
@@ -258,11 +277,11 @@ bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int e
         return 1;
     }
     for (auto& tank : tanks) {
-        if (CheckEssences(object, tank.get(), k, expected_x, expected_y)) {
+        if (CheckEssences(object, tank.get(), expected_x, expected_y)) {
             return 1;
         }
     }
-    if (CheckEssences(object, base.get(), k, expected_x, expected_y)) {
+    if (CheckEssences(object, base.get(), expected_x, expected_y)) {
         return 1;
     }
     
