@@ -1,6 +1,10 @@
 #include "my_framework.h"
 
 
+void drawSpriteWithBorder(Sprite* sprite, int x, int y) {
+    drawSprite(sprite, x + BORDER_SIZE, y + BORDER_SIZE);
+}
+
 MyFramework::MyFramework() {
 
 }
@@ -62,16 +66,20 @@ void MyFramework::Close() {
     }
 }
 
+void MyFramework::Draw(Essence* essence) {
+    drawSpriteWithBorder(essence->sprite, essence->x, essence->y);
+}
+
 void MyFramework::DrawMap() {
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
             if (map[i][j]) {
-                map[i][j]->Draw(j, i);
+                drawSpriteWithBorder(map[i][j]->sprite, j * CELL_SIZE, i * CELL_SIZE);
             }
         }	
     }
     if (base) {
-        base->Draw();
+        Draw(base.get());
     }
 }
 
@@ -89,8 +97,10 @@ void MyFramework::UpdateData() {
             else {
                 score += 1;
             }
+            if (!it->get()->bullet->active) {
+                bullets.erase(*it);
+            }
             tanks.erase(it);
-
         }
     }
 }
@@ -147,7 +157,7 @@ void MyFramework::MoveTanks() {
         else {
             Move(tank.get(), tank->type->speed);
         }
-        tank->Draw();
+        Draw(tank.get());
     }
 }
 
@@ -193,10 +203,18 @@ bool MyFramework::Tick() {
 }
 
 void MyFramework::MoveBullets() {
-    for (auto& [tank, bullet] : bullets) {
-        if (bullet->active) {
-            MoveBullet(bullet.get(), tank);
-            bullet->Draw();
+    for (auto it = bullets.begin(); it != bullets.end();) {  
+        if ((*it).second->active) {
+            if (MoveBullet(it->second.get(), (*it).first)) {
+                bullets.erase(it++);
+            }
+            else {
+                Draw(it->second.get());
+                it++;
+            }
+        }
+        else {
+            it++;
         }
     }
 }
@@ -443,7 +461,7 @@ bool MyFramework::Move(Movable* object, int speed) {
     return 1;
 }
 
-void MyFramework::MoveBullet(Bullet* bullet, std::shared_ptr<Tank> tank) {
+bool MyFramework::MoveBullet(Bullet* bullet, std::shared_ptr<Tank> tank) {
     int frame = tank->type->bullet_speed * BULLETS_SPEED > MAX_SPEED ? GAME_SPEED / MAX_SPEED : GAME_SPEED / (tank->type->bullet_speed *  BULLETS_SPEED);
     
     if (getTickCount() % frame == 0) {
@@ -454,10 +472,11 @@ void MyFramework::MoveBullet(Bullet* bullet, std::shared_ptr<Tank> tank) {
             bullet->active = false;
             bullet->directions[bullet->current_direction] = 0;
             if (std::find(tanks.begin(), tanks.end(), tank) == tanks.end()) {
-                bullets.erase(tank);
+                return 1;
             }
         }
     }
+    return 0;
 }
 
 void MyFramework::onMouseMove(int x, int y, int xrelative, int yrelative) {

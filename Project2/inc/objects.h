@@ -10,22 +10,10 @@
 
 #include "Framework.h"
 
-#define MAX_SPEED 6
-#define GAME_SPEED 12
-#define FRAMES 3
-#define BULLETS_SPEED 6
-
-#define BORDER_SIZE  10
-#define CELL_SIZE 16
-
-void drawSpriteWithBorder(Sprite* sprite, int x, int y);
-
 class Object {	
 public:
 	Object(Sprite *m_sprite);
 	virtual ~Object();
-
-	virtual void Draw(int x, int y);
 
 	Sprite *sprite;
 
@@ -63,8 +51,6 @@ public:
 	virtual ~Essence() {
 		
 	}
-
-	virtual void Draw();
 
 	Sprite *sprite;
 

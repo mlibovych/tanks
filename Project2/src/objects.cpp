@@ -1,8 +1,5 @@
 #include "objects.h"
 
-void drawSpriteWithBorder(Sprite* sprite, int x, int y) {
-    drawSprite(sprite, x + BORDER_SIZE, y + BORDER_SIZE);
-}
 
 Object::Object(Sprite *m_sprite) :
         sprite(m_sprite)
@@ -12,10 +9,6 @@ Object::Object(Sprite *m_sprite) :
 
 Object::~Object() {
 
-}
-
-void Object::Draw(int x, int y) {
-    drawSpriteWithBorder(sprite, x * CELL_SIZE, y * CELL_SIZE);
 }
 
 BrickWall::BrickWall(Sprite *m_sprite) :
@@ -45,10 +38,6 @@ Movable::Movable(FRKey key) : current_direction(key)
 Movable::~Movable() {
 
 }
-
-void Essence::Draw() {
-    drawSpriteWithBorder(sprite, x, y);
-};
 
 void Movable::Start(FRKey k) {
     for (auto& [key, value] : directions) {

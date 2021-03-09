@@ -12,11 +12,21 @@
 #include "Framework.h"
 #include "objects.h"
 
-#define GOAL 2
+#define GOAL 10
 #define MAX_TANKS_ON_BOARD 4
+
+#define MAX_SPEED 6
+#define GAME_SPEED 12
+#define FRAMES 3
+#define BULLETS_SPEED 6
+
+#define BORDER_SIZE  10
+#define CELL_SIZE 16
 
 using MapRow = std::array<std::shared_ptr<Object>, 32>;
 using Map = std::array<MapRow, 32>;
+
+void drawSpriteWithBorder(Sprite* sprite, int x, int y);
 
 class MyFramework : public Framework {
 	std::unordered_map<std::string, Sprite *> sprites;
@@ -76,7 +86,7 @@ public:
 
 	bool Move(Movable* object, int speed);
 
-	void MoveBullet(Bullet* bullet, std::shared_ptr<Tank> tank);
+	bool MoveBullet(Bullet* bullet, std::shared_ptr<Tank> tank);
 
 	virtual void onMouseMove(int x, int y, int xrelative, int yrelative);
 
@@ -113,4 +123,6 @@ public:
 	void Respawn();
 
 	void UpdateData();
+
+	void Draw(Essence* essence);
 };
