@@ -47,6 +47,9 @@ class MyFramework : public Framework {
 
 	int health = 3;
 	int score = 0;
+
+	std::random_device rd;
+    std::mt19937 gen;
 public:
 	MyFramework();
 

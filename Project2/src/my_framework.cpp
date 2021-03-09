@@ -5,7 +5,8 @@ void drawSpriteWithBorder(Sprite* sprite, int x, int y) {
     drawSprite(sprite, x + BORDER_SIZE, y + BORDER_SIZE);
 }
 
-MyFramework::MyFramework() {
+MyFramework::MyFramework() : gen(rd())
+{
 
 }
 
@@ -107,8 +108,6 @@ void MyFramework::UpdateData() {
 
 void MyFramework::FindWay(Tank *tank) {
     if (!Move(tank, tank->type->speed)) {
-        std::random_device rd;
-        std::mt19937 gen(rd());
         std::uniform_int_distribution<> dis(0, 3);
         int direction = dis(gen);
 
@@ -120,8 +119,6 @@ void MyFramework::FindWay(Tank *tank) {
 void MyFramework::Fire(Tank *tank) {
     if (!tank->bullet->active) {
         int chance = 2000;
-        std::random_device rd;
-        std::mt19937 gen(rd());
 
         if (tank->current_direction == FRKey::LEFT ||
             tank->current_direction == FRKey::RIGHT) {
@@ -163,7 +160,10 @@ void MyFramework::MoveTanks() {
 
 void MyFramework::Spawn() {
     if (getTickCount() % 4000 == 0 && tanks.size() < MAX_TANKS_ON_BOARD) {
-        SpawnTank(tank_types["player_base"], 0, 0, FRKey::UP, Role::ENEMY);
+        std::uniform_int_distribution<> dis(0, 1);
+        int x = dis(gen) ? 0 : 28;
+
+        SpawnTank(tank_types["player_base"], x, 0, FRKey::DOWN, Role::ENEMY);
     }
     for (auto spawn_it = spawning.begin(); spawn_it != spawning.end(); ++spawn_it) {
         bool can_spawn = 1;
