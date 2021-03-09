@@ -8,24 +8,24 @@
                                 |
             bbbbbbbb            |
             bbbbbbbb            |
-            bbbbbbbb            |
+bbbb        bbbbbbbb        bbbb|
+bbbb                        bbbb|
+ssss                        ssss|
+ssss                        ssss|
                                 |
                                 |
                                 |
-        ssss        ssss        |
-        ssss        ssss        |
-                                |
-                                |
-                                |
-                                |
-                                |
-    bbbb                        |
-            bbbb                |
-                                |
-                                |
-                                |
-            bbbbbbbb            |
-            bbbbbbbb    bbbb    |
+    bbbb    bb    bb    bbbb    |
+    bbbb    bb    bb    bbbb    |
+    bbbb    bb    bb    bbbb    |
+    bbbb    bbbbbbbb    bbbb    |
+    bbbb    bbbbbbbb    bbbb    |
+    bbbb                bbbb    |
+    bbbb                bbbb    |
+    bbbb                bbbb    |
+    bbbb                bbbb    |
+    bbbb    bbbbbbbb    bbbb    |
+    bbbb    bbbbbbbb    bbbb    |
             bbf   bb            |
             bb    bb            |
             bb    bb            |

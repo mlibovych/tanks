@@ -136,10 +136,10 @@ std::shared_ptr<Tank> MyFramework::SpawnTank(std::shared_ptr<TankType> type, int
 bool MyFramework::CheckBorders(Movable *object, FRKey k, int* expected_x, int* expected_y) {
     int sign = k == FRKey::LEFT || k == FRKey::UP ? -1 : 1;
 
-    if (k == FRKey::LEFT) {
+    if (k == FRKey::LEFT || k == FRKey::RIGHT) {
         *expected_x += object->step_size * sign;
     }
-    else if (k == FRKey::UP) {
+    else if (k == FRKey::UP || k == FRKey::DOWN) {
         *expected_y += object->step_size * sign;
     }
     if (*expected_x < 0 ||
@@ -305,6 +305,12 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
     object->Rotate(k);
     if (object->current_direction != k) {
         if (k == FRKey::RIGHT || k == FRKey::LEFT) {
+            if (k == FRKey::LEFT) {
+                expected_x += 1;
+            }
+            else {
+                expected_x -= 1;
+            }
             if (object->current_direction == FRKey::DOWN) {
                 expected_y += (CELL_SIZE * 2)  - object->y % (CELL_SIZE * 2);
             }
@@ -314,6 +320,12 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
             }
         }
         else {
+            if (k == FRKey::UP) {
+                expected_y += 1;
+            }
+            else {
+                expected_y -= 1;
+            }
             if (object->current_direction == FRKey::RIGHT) {
                 expected_x += (CELL_SIZE * 2) - object->x % (CELL_SIZE * 2);
             }
