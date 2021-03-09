@@ -202,9 +202,20 @@ bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int e
     }
     
     auto [row, cell] = GetExpectedCoords(k, expected_x, expected_y);
+    int x_add = 0;
+    int y_add = 0;
 
-    for (int i = 0; i < object->h / CELL_SIZE; i++) {
-        for (int j = 0; j < object->w / CELL_SIZE; j++) {
+    if (expected_y % CELL_SIZE != 0 &&
+        (k == FRKey::RIGHT || k == FRKey::LEFT)) {
+        y_add = 1;
+    }
+    if (expected_x % CELL_SIZE != 0 &&
+        (k == FRKey::UP || k == FRKey::DOWN)) {
+        x_add = 1;
+    }
+
+    for (int i = 0; i < object->h / CELL_SIZE + y_add; i++) {
+        for (int j = 0; j < object->w / CELL_SIZE + x_add; j++) {
             if (map[row + i][cell + j]) {
                 return 1;
             }
