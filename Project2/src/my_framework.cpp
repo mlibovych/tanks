@@ -24,8 +24,8 @@ bool MyFramework::Init() {
     //player creation
     player = SpawnTank(tank_types["player_base"], 8, 28, FRKey::UP, Role::PLAYER);
 
-    SpawnTank(tank_types["player_base"], 0, 0, FRKey::DOWN, Role::ENEMY);
-
+    SpawnTank(tank_types["player_base"], 1, 1, FRKey::DOWN, Role::ENEMY);
+    SpawnTank(tank_types["player_base"], 28, 0, FRKey::DOWN, Role::ENEMY);
     return true;
 }
 
@@ -79,33 +79,95 @@ void MyFramework::UpdateData() {
             if (it->get()->role == Role::PLAYER) {
                 //Respawn();
                 std::cout << "respawn" << std::endl;
+                health -= 1;
             }
             else {
-                tanks.erase(it);
+                score += 1;
             }
+            tanks.erase(it);
+
         }
     }
     if (base->health <= 0) {
-        base = nullptr;
+        // change sprite
+    }
+}
+
+void MyFramework::FindWay(Tank *tank) {
+    if (!Move(tank, tank->type->speed)) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, 3);
+        int direction = dis(gen);
+
+        tank->Stop(tank->current_direction);
+        tank->Start(static_cast<FRKey>(direction));
+    }
+}
+
+void MyFramework::Fire(Tank *tank) {
+    if (!tank->bullet->active) {
+        int chance = 2000;
+        std::random_device rd;
+        std::mt19937 gen(rd());
+
+        if (tank->current_direction == FRKey::LEFT ||
+            tank->current_direction == FRKey::RIGHT) {
+            if ((tank->y + tank->h /2 >= player->y && tank->y + tank->h /2 <= player->y + player->h) 
+                || (tank->y + tank->h /2 >= base->y && tank->y + tank->h /2 <= base->y + base->h)) {
+                chance = 250;
+            }
+        }
+
+        if (tank->current_direction == FRKey::UP ||
+            tank->current_direction == FRKey::DOWN) {
+            if ((tank->x + tank->w / 2 >= player->x && tank->x + tank->w / 2 <= player->x + player->w) 
+                || (tank->x + tank->w / 2 >= base->x && tank->x + tank->w / 2 <= base->x + base->w)) {
+                chance = 250;
+            }
+        }
+
+        std::uniform_int_distribution<> dis(1, chance);
+        int fire = dis(gen);
+
+        if (fire == 1) {
+            tank->Shoot();
+        }
+    }
+}
+
+void MyFramework::MoveTanks() {
+    for(auto& tank : tanks) {
+        if (tank->role == Role::ENEMY) {
+            FindWay(tank.get());
+            Fire(tank.get());
+        }
+        else {
+            Move(tank.get(), tank->type->speed);
+        }
+        tank->Draw();
     }
 }
 
 bool MyFramework::Tick() {
     UpdateData();
+    //spawn enamys;
+    //Spawn();
     //draw background
     drawSpriteWithBorder(sprites["background"], 0, 0);
     //draw map
     DrawMap();
     //draw objects
     MoveBullets();
-    
     //draw tanks
-    for(auto& tank : tanks) {
-        Move(tank.get(), tank->type->speed);
-        tank->Draw();
-    }
+    MoveTanks();
     //check state
-    if (!base || score >= GOAL) {
+    if (base->health <= 0 || health <= 0) {
+        std::cout << "Defeat" << std::endl;
+        return true;
+    }
+    if (score >= GOAL) {
+        std::cout << "Victory" << std::endl;
         return true;
     }
     return false;
@@ -129,6 +191,9 @@ std::shared_ptr<Tank> MyFramework::SpawnTank(std::shared_ptr<TankType> type, int
     tank->SetType(type);
     tank->SetBullet(bullets[tank]);
     tank->role = role;
+    if (role == Role::ENEMY) {
+        tank->Start(key);
+    }
     tanks.push_back(tank);
     return tank;
 }
@@ -316,12 +381,6 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
     object->Rotate(k);
     if (object->current_direction != k) {
         if (k == FRKey::RIGHT || k == FRKey::LEFT) {
-            if (k == FRKey::LEFT) {
-                expected_x += 1;
-            }
-            else {
-                expected_x -= 1;
-            }
             if (object->current_direction == FRKey::DOWN) {
                 expected_y += (CELL_SIZE * 2)  - object->y % (CELL_SIZE * 2);
             }
@@ -331,12 +390,6 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
             }
         }
         else {
-            if (k == FRKey::UP) {
-                expected_y += 1;
-            }
-            else {
-                expected_y -= 1;
-            }
             if (object->current_direction == FRKey::RIGHT) {
                 expected_x += (CELL_SIZE * 2) - object->x % (CELL_SIZE * 2);
             }
@@ -352,7 +405,7 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
     }
 }
 
-void MyFramework::Move(Movable* object, int speed) {
+bool MyFramework::Move(Movable* object, int speed) {
     int frame = speed > MAX_SPEED ? GAME_SPEED / MAX_SPEED : GAME_SPEED / speed;
     
     for (const auto& [key, value] : object->directions) {
@@ -361,11 +414,14 @@ void MyFramework::Move(Movable* object, int speed) {
             if (getTickCount() % frame == 0) {
                 if (!CheckCollision(object, key, object->x, object->y)) {
                     object->Move(key);
+                    return 1;
                 }
+                return 0;
             }
             break;
         }
     }
+    return 1;
 }
 
 void MyFramework::MoveBullet(Bullet* bullet, std::shared_ptr<Tank> tank) {

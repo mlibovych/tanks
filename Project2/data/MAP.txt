@@ -1,14 +1,14 @@
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-            bbbbbbbb            |
-            bbbbbbbb            |
-bbbb        bbbbbbbb        bbbb|
+    s                           |
+    s                           |
+    s                           |
+    s                           |
+    s                           |
+    s                           |
+    s                           |
+    s                           |
+    s       bbbbbbbb            |
+    s       bbbbbbbb            |
+bbbbs       bbbbbbbb        bbbb|
 bbbb                        bbbb|
 ssss                        ssss|
 ssss                        ssss|

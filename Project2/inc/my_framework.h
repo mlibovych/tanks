@@ -6,11 +6,13 @@
 #include <vector>
 #include <list>
 #include <algorithm>
+#include <random>
 
 #include "Framework.h"
 #include "objects.h"
 
-#define GOAL 20
+#define GOAL 2
+#define MAX_TANKS_ON_BOARD 4
 
 using MapRow = std::array<std::shared_ptr<Object>, 32>;
 using Map = std::array<MapRow, 32>;
@@ -31,7 +33,7 @@ class MyFramework : public Framework {
 	int map_w = 512;
 	int map_h = 512;
 
-	// int health = 3;
+	int health = 3;
 	int score = 0;
 public:
 	MyFramework();
@@ -68,7 +70,7 @@ public:
 
 	void Rotate(Movable* object, FRKey k);
 
-	void Move(Movable* object, int speed);
+	bool Move(Movable* object, int speed);
 
 	void MoveBullet(Bullet* bullet, std::shared_ptr<Tank> tank);
 
@@ -98,6 +100,11 @@ public:
 
 	void MoveBullets();
 
-	void UpdateData();
+	void FindWay(Tank *tank);
 
+	void Fire(Tank *tank);
+
+	void MoveTanks();
+
+	void UpdateData();
 };
