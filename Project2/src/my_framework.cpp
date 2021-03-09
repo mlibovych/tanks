@@ -22,7 +22,7 @@ bool MyFramework::Init() {
     GenerateMap(); 
 
     //player creation
-    player = SpawnTank(tank_types["player_base"], 7, 28, FRKey::UP, Role::PLAYER);
+    player = SpawnTank(tank_types["player_base"], 8, 28, FRKey::UP, Role::PLAYER);
 
     SpawnTank(tank_types["player_base"], 0, 0, FRKey::DOWN, Role::ENEMY);
 
@@ -136,10 +136,10 @@ std::shared_ptr<Tank> MyFramework::SpawnTank(std::shared_ptr<TankType> type, int
 bool MyFramework::CheckBorders(Movable *object, FRKey k, int* expected_x, int* expected_y) {
     int sign = k == FRKey::LEFT || k == FRKey::UP ? -1 : 1;
 
-    if (k == FRKey::RIGHT || k == FRKey::LEFT) {
+    if (k == FRKey::LEFT) {
         *expected_x += object->step_size * sign;
     }
-    else {
+    else if (k == FRKey::UP) {
         *expected_y += object->step_size * sign;
     }
     if (*expected_x < 0 ||
@@ -200,7 +200,7 @@ bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int e
     if (CheckEssences(object, base.get(), k, expected_x, expected_y)) {
         return 1;
     }
-
+    
     auto [row, cell] = GetExpectedCoords(k, expected_x, expected_y);
 
     for (int i = 0; i < object->h / CELL_SIZE; i++) {
@@ -254,7 +254,6 @@ bool MyFramework::CheckBulletEssences(Bullet *bullet, Tank* tank, Essence *other
         return 0;
     }
     other->health -= tank->type->power;
-    // std::cout << other->health << std::endl;
     return 1;
 }
 
@@ -307,19 +306,19 @@ void MyFramework::Rotate(Movable* object, FRKey k) {
     if (object->current_direction != k) {
         if (k == FRKey::RIGHT || k == FRKey::LEFT) {
             if (object->current_direction == FRKey::DOWN) {
-                expected_y += (CELL_SIZE * 1)  - object->y % (CELL_SIZE * 1);
+                expected_y += (CELL_SIZE * 2)  - object->y % (CELL_SIZE * 2);
             }
             else if (object->current_direction == FRKey::UP) {
                 
-                expected_y -= object->y % (CELL_SIZE * 1);
+                expected_y -= object->y % (CELL_SIZE * 2);
             }
         }
         else {
             if (object->current_direction == FRKey::RIGHT) {
-                expected_x += (CELL_SIZE * 1) - object->x % (CELL_SIZE * 1);
+                expected_x += (CELL_SIZE * 2) - object->x % (CELL_SIZE * 2);
             }
             else if (object->current_direction == FRKey::LEFT) {
-                expected_x -= object->x % (CELL_SIZE * 1);
+                expected_x -= object->x % (CELL_SIZE * 2);
             }
         }
         if (!CheckCollision(object, k, expected_x, expected_y)) {

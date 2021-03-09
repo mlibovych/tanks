@@ -6,27 +6,27 @@
                                 |
                                 |
                                 |
+            bbbbbbbb            |
+            bbbbbbbb            |
+            bbbbbbbb            |
+                                |
+                                |
+                                |
+        ssss        ssss        |
+        ssss        ssss        |
+                                |
+                                |
+                                |
+                                |
+                                |
+    bbbb                        |
             bbbb                |
-            bbbb                |
-            bbbb                |
                                 |
                                 |
                                 |
-                    ssss        |
-                    ssss        |
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-           bbbbbb               |
-           bf                   |
-           b                    |
-           b                    |
-           b                    |
+            bbbbbbbb            |
+            bbbbbbbb    bbbb    |
+            bbf   bb            |
+            bb    bb            |
+            bb    bb            |
+            bb    bb            |
