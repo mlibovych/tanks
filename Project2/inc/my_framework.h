@@ -11,6 +11,7 @@
 
 #include "Framework.h"
 #include "objects.h"
+#include "animation.h"
 
 #define GOAL 10
 #define MAX_TANKS_ON_BOARD 5
@@ -50,6 +51,9 @@ class MyFramework : public Framework {
 	std::shared_ptr<BulletData> bullet_data;
 	std::list<std::shared_ptr<Tank>> tanks;
 	std::list<std::shared_ptr<Tank>> spawning;
+
+	std::unordered_map<std::string, std::shared_ptr<AnimationData>> animations_templates;
+	std::list<std::unique_ptr<Animation>> animations;
 
 	Map map;
 
@@ -126,6 +130,8 @@ public:
 
 	void CreateObjects();
 
+	void CreateAnimations();
+
 	void CreateTanks();
 
 	void MoveBullets();
@@ -140,7 +146,9 @@ public:
 
 	void UpdateData();
 
-	void Draw(Essence* essence);
+	void CheckState();
 
-	void ShowLabel();
+	void DrawAnimations();
+
+	void Draw(Essence* essence);
 };

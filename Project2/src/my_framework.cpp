@@ -30,8 +30,8 @@ void MyFramework::PreInit(int& width, int& height, bool& fullscreen)
 bool MyFramework::Init() {
     LoadSprites();
     CreateObjects();
-    //tanks generation
     CreateTanks();
+    CreateAnimations();
 
     //map generation
     GenerateMap(); 
@@ -54,6 +54,10 @@ void MyFramework::CreateObjects() {
     objects["s2"] = std::make_shared<SteelWall> (sprites["s2"]);
     objects["s3"] = std::make_shared<SteelWall> (sprites["s3"]);
     objects["s4"] = std::make_shared<SteelWall> (sprites["s4"]);
+}
+
+void MyFramework::CreateAnimations() {
+    animations_templates["explosion"] = std::make_shared<Explosion> ();
 }
 
 void MyFramework::LoadSprites() {
@@ -103,7 +107,7 @@ void MyFramework::DrawMap() {
         x += i % 2 == 0 ? 0 : 32;
         drawSpriteWithBorder(sprites["e_icon"], x, y);
     }
-    for (int i = 0; i < health; i++) {
+    for (int i = 0; i < health - 1; i++) {
         int x = MAP_WIDTH + BORDER_SIZE * 2;
         int y = BORDER_SIZE + 384;
 
@@ -118,7 +122,6 @@ void MyFramework::Respawn() {
         player = SpawnTank(tank_types["player_base"], 8, 28, FRKey::UP, Role::PLAYER);
     }
     else {
-        ShowLabel();
     }
 }
 
@@ -154,13 +157,13 @@ void MyFramework::FindWay(Tank *tank) {
 
 void MyFramework::Fire(Tank *tank) {
     if (!tank->bullet->active) {
-        int chance = 2000;
+        int chance = 1500;
 
         if (tank->current_direction == FRKey::LEFT ||
             tank->current_direction == FRKey::RIGHT) {
             if ((tank->y + tank->h /2 >= player->y && tank->y + tank->h /2 <= player->y + player->h) 
                 || (tank->y + tank->h /2 >= base->y && tank->y + tank->h /2 <= base->y + base->h)) {
-                chance = 250;
+                chance = 200;
             }
         }
 
@@ -168,7 +171,7 @@ void MyFramework::Fire(Tank *tank) {
             tank->current_direction == FRKey::DOWN) {
             if ((tank->x + tank->w / 2 >= player->x && tank->x + tank->w / 2 <= player->x + player->w) 
                 || (tank->x + tank->w / 2 >= base->x && tank->x + tank->w / 2 <= base->x + base->w)) {
-                chance = 250;
+                chance = 200;
             }
         }
 
@@ -218,11 +221,31 @@ void MyFramework::Spawn() {
     } 
 }
 
-bool MyFramework::Tick() {
-    if (state == State::MENU) {
+void MyFramework::DrawAnimations() {
+    for (auto it = animations.begin(); it != animations.end(); it++) {
+        Animation* animation = it->get();
+
+        drawSpriteWithBorder(animation->data->sprites[animation->tick], animation->x, animation->y);
+        if (getTickCount() % 30 == 0) {
+            if (++(animation->tick) >= static_cast<int> (animation->data->sprites.size())) {
+                animations.erase(it);
+            }
+        }
+    }
+}
+
+void MyFramework::CheckState() {
+    if (base->health <= 0 || health <= 0 || score >= GOAL) {
         delay++;
     }
-    else {
+    if (delay >= 2000) {
+        delay = 0;
+        state = State::MENU;
+    }
+}
+
+bool MyFramework::Tick() {
+    if (state == State::GAME) {
         UpdateData();
         //spawn enamys;
         Spawn();
@@ -232,13 +255,26 @@ bool MyFramework::Tick() {
         MoveBullets();
         //draw tanks
         MoveTanks();
+        //animations
+        DrawAnimations();
         //check state
-        if (base->health <= 0 || health <= 0 || score >= GOAL) {
-            delay++;
+        CheckState();
+    }
+    else if (state == State::MENU) {
+        //draw result
+        Sprite *sprite;
+
+        if (base->health <= 0 || health <= 0) {
+            sprite = sprites["flag"];
         }
-        if (delay >= 2000) {
-            delay = 0;
-            state = State::MENU;
+        else {
+            sprite = sprites["eagle"];
+        }
+        drawSpriteWithBorder(sprite,
+                            (m_width + MENU_SIZE) / 2 - 32, 
+                            m_height / 2 - 32);
+        if (delay++ >= 5000) {
+            return true;
         }
     }
     return false;
@@ -422,7 +458,6 @@ bool MyFramework::DealDamage(Bullet *bullet, Tank* tank, FRKey k, int expected_x
     }
     if (CheckBulletEssences(bullet, tank, base.get(), k, expected_x, expected_y)) {
         base->sprite = sprites["flag"];
-        ShowLabel();
         return 1;
     }
     return 0;
@@ -509,12 +544,15 @@ bool MyFramework::Move(Movable* object, int speed) {
 
 bool MyFramework::MoveBullet(Bullet* bullet, std::shared_ptr<Tank> tank) {
     int frame = tank->type->bullet_speed * BULLETS_SPEED > MAX_SPEED ? GAME_SPEED / MAX_SPEED : GAME_SPEED / (tank->type->bullet_speed *  BULLETS_SPEED);
-    
+
     if (getTickCount() % frame == 0) {
         if (!CheckBulletCollision(bullet, tank.get(), bullet->current_direction, bullet->x, bullet->y)) {
             bullet->Move(bullet->current_direction);
         }
         else  {
+            animations.push_back(std::make_unique<Animation> (animations_templates["explosion"], 
+                                                              bullet->x + bullet->w / 2 - 32,
+                                                              bullet->y + bullet->h / 2 - 32));
             bullet->active = false;
             bullet->directions[bullet->current_direction] = 0;
             if (std::find(tanks.begin(), tanks.end(), tank) == tanks.end()) {
@@ -599,8 +637,4 @@ void MyFramework::GenerateMap() {
             }
         }
     }
-}
-
-void MyFramework::ShowLabel() {
-
 }

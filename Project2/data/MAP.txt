@@ -1,26 +1,26 @@
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-                                |
-            bbbbbbbb            |
-            bbbbbbbb            |
-bbbb        bbbbbbbb        bbbb|
-bbbb                        bbbb|
-ssss                        ssss|
-ssss                        ssss|
-                                |
-                                |
-                                |
-    bbbb    bb    bb    bbbb    |
-    bbbb    bb    bb    bbbb    |
-    bbbb    bb    bb    bbbb    |
-    bbbb    bbbbbbbb    bbbb    |
-    bbbb    bbbbbbbb    bbbb    |
+              bbbb              |
+              bbbb              |
+              bbbb              |
+              bbbb              |
     bbbb                bbbb    |
+    bbbb                bbbb    |
+    bbbb                bbbb    |
+    bbbb                bbbb    |
+            bbbbbbbb            |
+            bbbbbbbb            |
+bbbb          ssss          bbbb|
+bbbb          ssss          bbbb|
+ssss          ssss          ssss|
+ssss          ssss          ssss|
+            bbbbbbbb           |
+            bbbbbbbb            |
+                                |
+                                |
+    bbbb                bbbb    |
+    bbbb      bbbb      bbbb    |
+    bbbb      bbbb      bbbb    |
+    bbbb      bbbb      bbbb    |
+    bbbb      bbbb      bbbb    |
     bbbb                bbbb    |
     bbbb                bbbb    |
     bbbb                bbbb    |
