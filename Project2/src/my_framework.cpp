@@ -44,6 +44,7 @@ bool MyFramework::Init() {
 void MyFramework::CreateTanks() {
     bullet_data = std::make_shared<BulletData> ();
     tank_types["player_base"] = std::make_shared<PlayerBaseTank> ();
+    tank_types["enemy_base"] = std::make_shared<EnemyBaseTank> ();
 }
 
 void MyFramework::CreateObjects() {
@@ -65,7 +66,9 @@ void MyFramework::LoadSprites() {
     sprites["s4"] = createSprite("Project2/data/s4.png");
     sprites["eagle"] = createSprite("Project2/data/eagle.png");
     sprites["flag"] = createSprite("Project2/data/flag.png");
-
+    sprites["p_icon"] = createSprite("Project2/data/player_icon.png");
+    sprites["e_icon"] = createSprite("Project2/data/enemy_icon.png");
+    sprites["game_over"] = createSprite("Project2/data/game_over.png");
 }
 
 void MyFramework::Close() {
@@ -81,7 +84,7 @@ void MyFramework::Draw(Essence* essence) {
 void MyFramework::DrawMap() {
     //draw background
     drawSpriteWithBorder(sprites["background"], 0, 0);
-
+    //walls
     for (int i = 0; i < 32; ++i) {
         for (int j = 0; j < 32; ++j) {
             if (map[i][j]) {
@@ -89,12 +92,34 @@ void MyFramework::DrawMap() {
             }
         }	
     }
+    //base
     Draw(base.get());
+    //icons
+    for (int i = 0; i < avaliable_tanks; i++) {
+        int x = MAP_WIDTH + BORDER_SIZE * 2;
+        int y = BORDER_SIZE;
+
+        y += (i / 2) * 32;
+        x += i % 2 == 0 ? 0 : 32;
+        drawSpriteWithBorder(sprites["e_icon"], x, y);
+    }
+    for (int i = 0; i < health; i++) {
+        int x = MAP_WIDTH + BORDER_SIZE * 2;
+        int y = BORDER_SIZE + 384;
+
+        y += (i / 2) * 32;
+        x += i % 2 == 0 ? 0 : 32;
+        drawSpriteWithBorder(sprites["p_icon"], x, y);
+    }
 }
 
 void MyFramework::Respawn() {
-    health -= 1;
-    player = SpawnTank(tank_types["player_base"], 8, 28, FRKey::UP, Role::PLAYER);
+    if (--health > 0) {
+        player = SpawnTank(tank_types["player_base"], 8, 28, FRKey::UP, Role::PLAYER);
+    }
+    else {
+        ShowLabel();
+    }
 }
 
 void MyFramework::UpdateData() {
@@ -115,7 +140,10 @@ void MyFramework::UpdateData() {
 }
 
 void MyFramework::FindWay(Tank *tank) {
-    if (!Move(tank, tank->type->speed)) {
+    std::uniform_int_distribution<> r_dis(0, 3000);
+    int random = r_dis(gen);
+
+    if (!Move(tank, tank->type->speed) || random == 1) {
         std::uniform_int_distribution<> dis(0, 3);
         int direction = dis(gen);
 
@@ -171,7 +199,7 @@ void MyFramework::Spawn() {
         std::uniform_int_distribution<> dis(0, 1);
         int x = dis(gen) ? 0 : 28;
 
-        SpawnTank(tank_types["player_base"], x, 0, FRKey::DOWN, Role::ENEMY);
+        SpawnTank(tank_types["enemy_base"], x, 0, FRKey::DOWN, Role::ENEMY);
         avaliable_tanks--;
     }
     for (auto spawn_it = spawning.begin(); spawn_it != spawning.end(); ++spawn_it) {
@@ -191,26 +219,27 @@ void MyFramework::Spawn() {
 }
 
 bool MyFramework::Tick() {
-    UpdateData();
-    //spawn enamys;
-    Spawn();
-    //draw map
-    DrawMap();
-    //draw objects
-    MoveBullets();
-    //draw tanks
-    MoveTanks();
-    //check state
-    if (base->health <= 0 || health <= 0) {
-        base->sprite = sprites["flag"];
-        //Defeat
-        // std::cout << "Defeat" << std::endl;
-        // return true;
+    if (state == State::MENU) {
+        delay++;
     }
-    if (score >= GOAL) {
-        //Victory
-        // std::cout << "Victory" << std::endl;
-        // return true;
+    else {
+        UpdateData();
+        //spawn enamys;
+        Spawn();
+        //draw map
+        DrawMap();
+        //draw objects
+        MoveBullets();
+        //draw tanks
+        MoveTanks();
+        //check state
+        if (base->health <= 0 || health <= 0 || score >= GOAL) {
+            delay++;
+        }
+        if (delay >= 2000) {
+            delay = 0;
+            state = State::MENU;
+        }
     }
     return false;
 }
@@ -392,6 +421,8 @@ bool MyFramework::DealDamage(Bullet *bullet, Tank* tank, FRKey k, int expected_x
         }
     }
     if (CheckBulletEssences(bullet, tank, base.get(), k, expected_x, expected_y)) {
+        base->sprite = sprites["flag"];
+        ShowLabel();
         return 1;
     }
     return 0;
@@ -568,4 +599,8 @@ void MyFramework::GenerateMap() {
             }
         }
     }
+}
+
+void MyFramework::ShowLabel() {
+
 }

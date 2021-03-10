@@ -23,15 +23,23 @@
 #define MAP_WIDTH 512
 #define MAP_HEIGHT 512
 #define BORDER_SIZE  10
-#define MENU_SIZE 200
+#define MENU_SIZE 100
 #define CELL_SIZE 16
 
 using MapRow = std::array<std::shared_ptr<Object>, 32>;
 using Map = std::array<MapRow, 32>;
 
+enum class State {
+	GAME,
+	MENU
+};
+
 void drawSpriteWithBorder(Sprite* sprite, int x, int y);
 
 class MyFramework : public Framework {
+	std::random_device rd;
+    std::mt19937 gen;
+
 	std::unordered_map<std::string, Sprite *> sprites;
 	std::unordered_map<std::string, std::shared_ptr<TankType>> tank_types;
 	std::unordered_map<std::shared_ptr<Tank>, std::shared_ptr<Bullet>> bullets;
@@ -51,9 +59,8 @@ class MyFramework : public Framework {
 	int avaliable_tanks = 10;
 	int health = 3;
 	int score = 0;
-
-	std::random_device rd;
-    std::mt19937 gen;
+	int delay = 0;
+	State state = State::GAME;
 public:
 	MyFramework();
 
@@ -134,4 +141,6 @@ public:
 	void UpdateData();
 
 	void Draw(Essence* essence);
+
+	void ShowLabel();
 };

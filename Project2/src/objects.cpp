@@ -187,18 +187,37 @@ void Bullet::ChangeSprite(FRKey k) {
 
 PlayerBaseTank::PlayerBaseTank() : TankType() {
     even = {
-        {FRKey::UP, createSprite("Project2/data/u_even.png")},
-        {FRKey::LEFT, createSprite("Project2/data/l_even.png")},
-        {FRKey::DOWN, createSprite("Project2/data/d_even.png")},
-        {FRKey::RIGHT, createSprite("Project2/data/r_even.png")}
+        {FRKey::UP, createSprite("Project2/data/player_base_up_even.png")},
+        {FRKey::LEFT, createSprite("Project2/data/player_base_left_even.png")},
+        {FRKey::DOWN, createSprite("Project2/data/player_base_down_even.png")},
+        {FRKey::RIGHT, createSprite("Project2/data/player_base_right_even.png")}
     };
     odd = {
-        {FRKey::UP, createSprite("Project2/data/u_odd.png")},
-        {FRKey::LEFT, createSprite("Project2/data/l_odd.png")},
-        {FRKey::DOWN, createSprite("Project2/data/d_odd.png")},
-        {FRKey::RIGHT, createSprite("Project2/data/r_odd.png")}
+        {FRKey::UP, createSprite("Project2/data/player_base_up_odd.png")},
+        {FRKey::LEFT, createSprite("Project2/data/player_base_left_odd.png")},
+        {FRKey::DOWN, createSprite("Project2/data/player_base_down_odd.png")},
+        {FRKey::RIGHT, createSprite("Project2/data/player_base_right_odd.png")}
     };
     speed = 2;
+    max_health = 1;
+    bullet_speed = 1;
+    power = 1;
+}
+
+EnemyBaseTank::EnemyBaseTank() : TankType() {
+    even = {
+        {FRKey::UP, createSprite("Project2/data/enemy_base_up_even.png")},
+        {FRKey::LEFT, createSprite("Project2/data/enemy_base_left_even.png")},
+        {FRKey::DOWN, createSprite("Project2/data/enemy_base_down_even.png")},
+        {FRKey::RIGHT, createSprite("Project2/data/enemy_base_right_even.png")}
+    };
+    odd = {
+        {FRKey::UP, createSprite("Project2/data/enemy_base_up_odd.png")},
+        {FRKey::LEFT, createSprite("Project2/data/enemy_base_left_odd.png")},
+        {FRKey::DOWN, createSprite("Project2/data/enemy_base_down_odd.png")},
+        {FRKey::RIGHT, createSprite("Project2/data/enemy_base_right_odd.png")}
+    };
+    speed = 1;
     max_health = 1;
     bullet_speed = 1;
     power = 1;

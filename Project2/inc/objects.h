@@ -120,6 +120,11 @@ public:
 	PlayerBaseTank();
 };
 
+class EnemyBaseTank : public TankType {
+public:
+	EnemyBaseTank();
+};
+
 class Bullet : public Movable {
 public:
 	Bullet(std::shared_ptr<BulletData> m_data, FRKey key);
