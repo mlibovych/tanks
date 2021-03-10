@@ -10,10 +10,20 @@ MyFramework::MyFramework() : gen(rd())
 
 }
 
+MyFramework::MyFramework(int width, int height) : gen(rd()) {
+    if (width < MAP_WIDTH || height < MAP_HEIGHT) {
+        std::cerr << "Given size is less than minimum required." << std::endl;
+    }
+    else {
+        m_width = width;
+        m_height = height;
+    }
+}
+
 void MyFramework::PreInit(int& width, int& height, bool& fullscreen)
 {
-    width = map_w + BORDER_SIZE * 2;
-    height = map_h + BORDER_SIZE * 2;
+    width = m_width + MENU_SIZE + BORDER_SIZE * 2;
+    height = m_height + BORDER_SIZE * 2;
     fullscreen = false;
 }
 
@@ -79,9 +89,7 @@ void MyFramework::DrawMap() {
             }
         }	
     }
-    if (base) {
-        Draw(base.get());
-    }
+    Draw(base.get());
 }
 
 void MyFramework::Respawn() {
@@ -159,11 +167,12 @@ void MyFramework::MoveTanks() {
 }
 
 void MyFramework::Spawn() {
-    if (getTickCount() % 4000 == 0 && tanks.size() < MAX_TANKS_ON_BOARD) {
+    if (avaliable_tanks && tanks.size() < MAX_TANKS_ON_BOARD && getTickCount() % 2000 == 0) {
         std::uniform_int_distribution<> dis(0, 1);
         int x = dis(gen) ? 0 : 28;
 
         SpawnTank(tank_types["player_base"], x, 0, FRKey::DOWN, Role::ENEMY);
+        avaliable_tanks--;
     }
     for (auto spawn_it = spawning.begin(); spawn_it != spawning.end(); ++spawn_it) {
         bool can_spawn = 1;
@@ -193,6 +202,7 @@ bool MyFramework::Tick() {
     MoveTanks();
     //check state
     if (base->health <= 0 || health <= 0) {
+        base->sprite = sprites["flag"];
         //Defeat
         // std::cout << "Defeat" << std::endl;
         // return true;
@@ -248,11 +258,11 @@ bool MyFramework::CheckBorders(Movable *object, FRKey k, int* expected_x, int* e
         *expected_y += object->step_size * sign;
     }
     if (*expected_x < 0 ||
-        *expected_x > map_w - object->w) {
+        *expected_x > MAP_WIDTH - object->w) {
         return 1;
     }
     if (*expected_y < 0 ||
-        *expected_y > map_h - object->h) {
+        *expected_y > MAP_HEIGHT - object->h) {
         return 1;
     }
     return 0;

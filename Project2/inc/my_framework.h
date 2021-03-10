@@ -7,20 +7,23 @@
 #include <list>
 #include <algorithm>
 #include <random>
-#include <queue>
+#include <stdexcept>
 
 #include "Framework.h"
 #include "objects.h"
 
 #define GOAL 10
-#define MAX_TANKS_ON_BOARD 4
+#define MAX_TANKS_ON_BOARD 5
 
 #define MAX_SPEED 6
 #define GAME_SPEED 12
 #define FRAMES 3
 #define BULLETS_SPEED 6
 
+#define MAP_WIDTH 512
+#define MAP_HEIGHT 512
 #define BORDER_SIZE  10
+#define MENU_SIZE 200
 #define CELL_SIZE 16
 
 using MapRow = std::array<std::shared_ptr<Object>, 32>;
@@ -42,9 +45,10 @@ class MyFramework : public Framework {
 
 	Map map;
 
-	int map_w = 512;
-	int map_h = 512;
+	int m_width = 512;
+	int m_height = 512;
 
+	int avaliable_tanks = 10;
 	int health = 3;
 	int score = 0;
 
@@ -52,6 +56,8 @@ class MyFramework : public Framework {
     std::mt19937 gen;
 public:
 	MyFramework();
+
+	MyFramework(int width, int heigth);
 
 	virtual void PreInit(int& width, int& height, bool& fullscreen);
 
