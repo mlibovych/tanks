@@ -13,7 +13,7 @@
 #include "objects.h"
 #include "animation.h"
 
-#define GOAL 10
+#define GOAL 20
 #define MAX_TANKS_ON_BOARD 5
 
 #define MAX_SPEED 6
@@ -54,16 +54,18 @@ class MyFramework : public Framework {
 
 	std::unordered_map<std::string, std::shared_ptr<AnimationData>> animations_templates;
 	std::list<std::unique_ptr<Animation>> animations;
+	std::list<std::shared_ptr<PowerUp>> power_ups;
 
 	Map map;
 
 	int m_width = 512;
 	int m_height = 512;
 
-	int avaliable_tanks = 10;
+	int avaliable_tanks = 20;
 	int health = 3;
 	int score = 0;
 	int delay = 0;
+	bool power_up_tick = true;
 	State state = State::GAME;
 public:
 	MyFramework();
@@ -149,6 +151,12 @@ public:
 	void CheckState();
 
 	void DrawAnimations();
+
+	void DrawPowerUps();
+
+	void CreatePowerUp(PowerType type);
+
+	void CreateTankPowerUp(int x_coord, int y_coord);
 
 	void Draw(Essence* essence);
 };

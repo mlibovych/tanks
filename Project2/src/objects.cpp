@@ -167,6 +167,15 @@ BulletData::~BulletData() {
     };
 }
 
+Essence::Essence(Sprite *m_sprite) : sprite(m_sprite)
+{
+
+}
+
+Essence::~Essence() {
+
+}
+
 Bullet::Bullet(std::shared_ptr<BulletData> m_data, FRKey key) : Movable(key),
                                                                data(m_data)
 {
@@ -221,4 +230,23 @@ EnemyBaseTank::EnemyBaseTank() : TankType() {
     max_health = 1;
     bullet_speed = 1;
     power = 1;
+}
+
+RadBaseTank::RadBaseTank() : TankType() {
+    even = {
+        {FRKey::UP, createSprite("Project2/data/base_red_up.png")},
+        {FRKey::LEFT, createSprite("Project2/data/base_red_left.png")},
+        {FRKey::DOWN, createSprite("Project2/data/base_red_down.png")},
+        {FRKey::RIGHT, createSprite("Project2/data/base_red_right.png")}
+    };
+    odd = {
+        {FRKey::UP, createSprite("Project2/data/enemy_base_up_odd.png")},
+        {FRKey::LEFT, createSprite("Project2/data/enemy_base_left_odd.png")},
+        {FRKey::DOWN, createSprite("Project2/data/enemy_base_down_odd.png")},
+        {FRKey::RIGHT, createSprite("Project2/data/enemy_base_right_odd.png")}
+    };
+    speed = 2;
+    max_health = 1;
+    bullet_speed = 1;
+    power = 2;
 }

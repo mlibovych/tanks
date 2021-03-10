@@ -41,13 +41,8 @@ class Essence {
 public:
 	Essence() = default;
 
-	Essence(Sprite *m_sprite) : sprite(m_sprite)
-	{
-
-	}
-	virtual ~Essence() {
-		
-	}
+	Essence(Sprite *m_sprite);
+	virtual ~Essence();
 
 	Sprite *sprite;
 
@@ -122,6 +117,11 @@ public:
 	EnemyBaseTank();
 };
 
+class RadBaseTank : public TankType {
+public:
+	RadBaseTank();
+};
+
 class Bullet : public Movable {
 public:
 	Bullet(std::shared_ptr<BulletData> m_data, FRKey key);
@@ -132,6 +132,17 @@ public:
 	virtual void ChangeSprite(FRKey k) override;
 
 	bool active = false;
+};
+
+enum class PowerType {
+	TANK,
+	STARR,
+	COUNT
+};
+
+class PowerUp : public Essence {
+public:
+	PowerType type;
 };
 
 class Tank : public Movable {
@@ -148,4 +159,5 @@ public:
 
 	std::shared_ptr<TankType> type;
 	std::shared_ptr<Bullet> bullet;
+	std::optional<PowerType> power_up;
 };

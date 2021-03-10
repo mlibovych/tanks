@@ -45,6 +45,7 @@ void MyFramework::CreateTanks() {
     bullet_data = std::make_shared<BulletData> ();
     tank_types["player_base"] = std::make_shared<PlayerBaseTank> ();
     tank_types["enemy_base"] = std::make_shared<EnemyBaseTank> ();
+    tank_types["red_base"] = std::make_shared<RadBaseTank> ();
 }
 
 void MyFramework::CreateObjects() {
@@ -73,6 +74,7 @@ void MyFramework::LoadSprites() {
     sprites["p_icon"] = createSprite("Project2/data/player_icon.png");
     sprites["e_icon"] = createSprite("Project2/data/enemy_icon.png");
     sprites["game_over"] = createSprite("Project2/data/game_over.png");
+    sprites["tank"] = createSprite("Project2/data/tank.png");
 }
 
 void MyFramework::Close() {
@@ -133,6 +135,9 @@ void MyFramework::UpdateData() {
             }
             else {
                 score += 1;
+                if (it->get()->power_up) {
+                    CreatePowerUp(*it->get()->power_up);
+                }
             }
             if (!it->get()->bullet->active) {
                 bullets.erase(*it);
@@ -192,17 +197,30 @@ void MyFramework::MoveTanks() {
         }
         else {
             Move(tank.get(), tank->type->speed);
+            for (auto it = power_ups.begin(); it != power_ups.end(); it++) {
+                if (CheckEssences(tank.get(), it->get(), tank.get()->x, tank.get()->y)) {
+                    if (it->get()->type == PowerType::TANK) {
+                        health++;
+                    }
+                    power_ups.erase(it);
+                }
+            }
         }
         Draw(tank.get());
     }
 }
 
 void MyFramework::Spawn() {
+    //tanks
     if (avaliable_tanks && tanks.size() < MAX_TANKS_ON_BOARD && getTickCount() % 2000 == 0) {
         std::uniform_int_distribution<> dis(0, 1);
         int x = dis(gen) ? 0 : 28;
 
-        SpawnTank(tank_types["enemy_base"], x, 0, FRKey::DOWN, Role::ENEMY);
+        auto tank = SpawnTank(tank_types["enemy_base"], x, 0, FRKey::DOWN, Role::ENEMY);
+        if (avaliable_tanks == 17 || avaliable_tanks == 10 || avaliable_tanks == 3) {
+            tank->power_up = PowerType::TANK;
+            tank->SetType(tank_types["red_base"]);
+        } 
         avaliable_tanks--;
     }
     for (auto spawn_it = spawning.begin(); spawn_it != spawning.end(); ++spawn_it) {
@@ -218,7 +236,7 @@ void MyFramework::Spawn() {
             tanks.push_back(*spawn_it);
             spawning.erase(spawn_it);
         }  
-    } 
+    }
 }
 
 void MyFramework::DrawAnimations() {
@@ -230,6 +248,17 @@ void MyFramework::DrawAnimations() {
             if (++(animation->tick) >= static_cast<int> (animation->data->sprites.size())) {
                 animations.erase(it);
             }
+        }
+    }
+}
+
+void MyFramework::DrawPowerUps() {
+    for (auto& poer_up : power_ups) {
+        if (getTickCount() % 100 == 0) {
+            power_up_tick = power_up_tick ? false : true;
+        }
+        if (power_up_tick) {
+            Draw(poer_up.get());
         }
     }
 }
@@ -247,17 +276,14 @@ void MyFramework::CheckState() {
 bool MyFramework::Tick() {
     if (state == State::GAME) {
         UpdateData();
-        //spawn enamys;
-        Spawn();
-        //draw map
-        DrawMap();
         //draw objects
+        Spawn();
+        DrawMap();
         MoveBullets();
-        //draw tanks
         MoveTanks();
-        //animations
         DrawAnimations();
-        //check state
+        DrawPowerUps();
+        //check game result
         CheckState();
     }
     else if (state == State::MENU) {
@@ -377,6 +403,7 @@ bool MyFramework::CheckCollision(Movable *object, FRKey k, int expected_x, int e
             return 1;
         }
     }
+    
     if (CheckEssences(object, base.get(), expected_x, expected_y)) {
         return 1;
     }
@@ -637,4 +664,24 @@ void MyFramework::GenerateMap() {
             }
         }
     }
+}
+
+void MyFramework::CreatePowerUp(PowerType type) {
+    std::uniform_int_distribution<> coords_dis(0, MAP_WIDTH - 64);
+    int x = coords_dis(gen);
+    int y = coords_dis(gen);
+
+    if (type == PowerType::TANK) {
+        CreateTankPowerUp(x, y);
+    }
+}
+
+void MyFramework::CreateTankPowerUp(int x_coord, int y_coord) {
+    auto power_up = std::make_shared<PowerUp> ();
+
+    power_up->sprite = sprites["tank"];
+    power_up->type = PowerType::TANK;
+    power_up->x = x_coord;
+    power_up->y = y_coord;
+    power_ups.push_back(power_up);
 }
