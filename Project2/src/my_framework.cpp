@@ -220,6 +220,7 @@ void MyFramework::Spawn() {
         if (avaliable_tanks == 17 || avaliable_tanks == 10 || avaliable_tanks == 3) {
             tank->power_up = PowerType::TANK;
             tank->SetType(tank_types["red_base"]);
+            power_ups.clear();
         } 
         avaliable_tanks--;
     }
