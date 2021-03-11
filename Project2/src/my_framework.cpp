@@ -46,6 +46,8 @@ void MyFramework::CreateTanks() {
     tank_types["player_base"] = std::make_shared<PlayerBaseTank> ();
     tank_types["enemy_base"] = std::make_shared<EnemyBaseTank> ();
     tank_types["red_base"] = std::make_shared<RadBaseTank> ();
+    tank_types["enemy_speed"] = std::make_shared<EnemySpeedTank> ();
+    tank_types["enemy_armor"] = std::make_shared<EnemyArmorTank> ();
 }
 
 void MyFramework::CreateObjects() {
@@ -105,16 +107,16 @@ void MyFramework::DrawMap() {
         int x = MAP_WIDTH + BORDER_SIZE * 2;
         int y = BORDER_SIZE;
 
-        y += (i / 2) * 32;
-        x += i % 2 == 0 ? 0 : 32;
+        y += (i / 2) * 34;
+        x += i % 2 == 0 ? 0 : 34;
         drawSpriteWithBorder(sprites["e_icon"], x, y);
     }
     for (int i = 0; i < health - 1; i++) {
         int x = MAP_WIDTH + BORDER_SIZE * 2;
         int y = BORDER_SIZE + 384;
 
-        y += (i / 2) * 32;
-        x += i % 2 == 0 ? 0 : 32;
+        y += (i / 2) * 34;
+        x += i % 2 == 0 ? 0 : 34;
         drawSpriteWithBorder(sprites["p_icon"], x, y);
     }
 }
@@ -168,7 +170,7 @@ void MyFramework::Fire(Tank *tank) {
             tank->current_direction == FRKey::RIGHT) {
             if ((tank->y + tank->h /2 >= player->y && tank->y + tank->h /2 <= player->y + player->h) 
                 || (tank->y + tank->h /2 >= base->y && tank->y + tank->h /2 <= base->y + base->h)) {
-                chance = 200;
+                chance = 250;
             }
         }
 
@@ -176,7 +178,7 @@ void MyFramework::Fire(Tank *tank) {
             tank->current_direction == FRKey::DOWN) {
             if ((tank->x + tank->w / 2 >= player->x && tank->x + tank->w / 2 <= player->x + player->w) 
                 || (tank->x + tank->w / 2 >= base->x && tank->x + tank->w / 2 <= base->x + base->w)) {
-                chance = 200;
+                chance = 250;
             }
         }
 
@@ -211,12 +213,23 @@ void MyFramework::MoveTanks() {
 }
 
 void MyFramework::Spawn() {
-    //tanks
     if (avaliable_tanks && tanks.size() < MAX_TANKS_ON_BOARD && getTickCount() % 2000 == 0) {
-        std::uniform_int_distribution<> dis(0, 1);
-        int x = dis(gen) ? 0 : 28;
+        std::uniform_int_distribution<> dis(1, 100);
+        int number = dis(gen);
+        int x = number < 50 ? 0 : 28;
+        
+        std::shared_ptr<TankType> type;
+        if (number > 95) {
+            type = tank_types["enemy_armor"];
+        }
+        else if (number > 70) {
+            type = tank_types["enemy_speed"];
+        }
+        else {
+            type = tank_types["enemy_base"];
+        }
 
-        auto tank = SpawnTank(tank_types["enemy_base"], x, 0, FRKey::DOWN, Role::ENEMY);
+        auto tank = SpawnTank(type, x, 0, FRKey::DOWN, Role::ENEMY);
         if (avaliable_tanks == 17 || avaliable_tanks == 10 || avaliable_tanks == 3) {
             tank->power_up = PowerType::TANK;
             tank->SetType(tank_types["red_base"]);

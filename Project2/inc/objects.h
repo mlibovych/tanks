@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "Framework.h"
+#include "tanks.h"
 
 class Object {	
 public:
@@ -85,41 +86,12 @@ public:
 	int step_size = 1;
 };
 
-class TankType {
-public:
-	TankType();
-	~TankType();
-
-	std::unordered_map<FRKey, Sprite *> even;
-    std::unordered_map<FRKey, Sprite *> odd;
-
-	int max_health;
-	int bullet_speed;
-	int power;
-	int speed;
-};
-
 class BulletData {
 public:
 	BulletData();
 	~BulletData();
 
 	std::unordered_map<FRKey, Sprite *> sprites;
-};
-
-class PlayerBaseTank : public TankType {
-public:
-	PlayerBaseTank();
-};
-
-class EnemyBaseTank : public TankType {
-public:
-	EnemyBaseTank();
-};
-
-class RadBaseTank : public TankType {
-public:
-	RadBaseTank();
 };
 
 class Bullet : public Movable {
